@@ -124,7 +124,7 @@ function planetLegend() {
     .join('')}</div>`;
 }
 
-function northIndianChart(varga) {
+function northChartSvg(varga) {
   const ascIndex = Number.isInteger(varga.ascendant_sign_index)
     ? varga.ascendant_sign_index
     : Math.max(0, SIGNS.indexOf(varga.ascendant_sign));
@@ -159,6 +159,15 @@ function northIndianChart(varga) {
   }).join('');
 
   return `
+    <svg class="north-chart" viewBox="-8 -8 416 416" role="img" aria-label="North Indian chart for ${esc(varga.varga)} ${esc(varga.name)}">
+      <rect class="chart-frame" x="0" y="0" width="400" height="400" rx="3" />
+      ${cells}
+      <path class="chart-grid" d="M0 0 L400 400 M400 0 L0 400 M200 0 L400 200 L200 400 L0 200 Z" />
+    </svg>`;
+}
+
+function northIndianChart(varga) {
+  return `
     <div class="chart-card">
       <div class="chart-card-head">
         <div>
@@ -167,14 +176,72 @@ function northIndianChart(varga) {
         </div>
         <span class="muted small">Lagna / लग्न: ${esc(varga.ascendant_sign)}</span>
       </div>
-      <svg class="north-chart" viewBox="-8 -8 416 416" role="img" aria-label="North Indian chart for ${esc(varga.varga)} ${esc(varga.name)}">
-        <rect class="chart-frame" x="0" y="0" width="400" height="400" rx="3" />
-        ${cells}
-        <path class="chart-grid" d="M0 0 L400 400 M400 0 L0 400 M200 0 L400 200 L200 400 L0 200 Z" />
-      </svg>
+      ${northChartSvg(varga)}
       ${planetLegend()}
       <p class="chart-note muted small">Hover a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
     </div>`;
+}
+
+function skeletonLines(count) {
+  return Array.from({ length: count }, () => '<div class="skeleton-line"></div>').join('');
+}
+
+function chartSkeleton() {
+  return `
+    <div class="skeleton" aria-busy="true" aria-label="Calculating chart">
+      <div class="skeleton-head">
+        <div class="skeleton-line w-40"></div>
+        <div class="skeleton-line w-20"></div>
+      </div>
+      <p class="skeleton-note">${engineReady ? 'Calculating chart…' : 'Loading ephemeris… first run downloads about 2.6 MB.'}</p>
+      <div class="skeleton-summary">${'<div class="skeleton-card"></div>'.repeat(6)}</div>
+      <div class="skeleton-panel">
+        <div class="skeleton-line w-25"></div>
+        <div class="skeleton-chart"></div>
+      </div>
+      <div class="skeleton-panel">
+        <div class="skeleton-line w-25"></div>
+        ${skeletonLines(6)}
+      </div>
+    </div>`;
+}
+
+function matchSkeleton() {
+  return `
+    <div class="skeleton" aria-busy="true" aria-label="Matching charts">
+      <div class="skeleton-head">
+        <div class="skeleton-line w-40"></div>
+        <div class="skeleton-line w-20"></div>
+      </div>
+      <p class="skeleton-note">${engineReady ? 'Matching charts…' : 'Loading ephemeris… first run downloads about 2.6 MB.'}</p>
+      <div class="skeleton-score">
+        <div class="skeleton-circle"></div>
+        <div class="skeleton-score-copy">
+          <div class="skeleton-line w-30"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line w-70"></div>
+        </div>
+      </div>
+      <div class="skeleton-panel">
+        <div class="skeleton-line w-25"></div>
+        ${skeletonLines(6)}
+      </div>
+      <div class="match-chart-grid">
+        <div class="skeleton-panel"><div class="skeleton-chart"></div></div>
+        <div class="skeleton-panel"><div class="skeleton-chart"></div></div>
+      </div>
+    </div>`;
+}
+
+function showSkeleton(selector, kind) {
+  const el = $(selector);
+  el.innerHTML = kind === 'match' ? matchSkeleton() : chartSkeleton();
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function hideResult(selector) {
+  $(selector).classList.add('hidden');
 }
 
 function renderChart({ chart, markdown }) {
@@ -353,6 +420,7 @@ $('#chart-form').addEventListener('submit', async (event) => {
   const button = event.target.querySelector('button[type="submit"]');
   button.disabled = true;
   button.textContent = engineReady ? 'Calculating…' : 'Loading ephemeris…';
+  showSkeleton('#chart-result', 'chart');
 
   try {
     const chart = await buildChart(readChartInput(event.target));
@@ -360,6 +428,7 @@ $('#chart-form').addEventListener('submit', async (event) => {
     renderChart({ chart, markdown: chartToMarkdown(chart) });
     $('#chart-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
+    hideResult('#chart-result');
     showError('#chart-error', err.message);
   } finally {
     button.disabled = false;
@@ -389,12 +458,90 @@ function kootaLabel(name) {
   return name.replaceAll('_', ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
+const KOOTA_HINDI = {
+  varna: 'वर्ण',
+  vashya: 'वश्य',
+  tara: 'तारा',
+  yoni: 'योनि',
+  graha_maitri: 'ग्रह मैत्री',
+  gana: 'गण',
+  bhakoot: 'भकूट',
+  nadi: 'नाड़ी',
+};
+
+function displayPlanetName(name) {
+  const text = String(name ?? '');
+  return planetName(text ? text[0].toUpperCase() + text.slice(1) : text);
+}
+
+function scoreGauge(score, max) {
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  const ratio = max > 0 ? Math.min(1, Math.max(0, score / max)) : 0;
+  const offset = circumference * (1 - ratio);
+  return `
+    <div class="match-gauge-wrap">
+      <svg class="match-gauge" viewBox="0 0 120 120" role="img" aria-label="Ashtakoota score ${esc(score)} out of ${esc(max)}">
+        <circle class="match-gauge-track" cx="60" cy="60" r="${radius}" />
+        <circle class="match-gauge-value" cx="60" cy="60" r="${radius}"
+          stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+          transform="rotate(-90 60 60)" />
+        <text class="match-gauge-score" x="60" y="60" text-anchor="middle">${esc(score)}</text>
+        <text class="match-gauge-max" x="60" y="78" text-anchor="middle">/ ${esc(max)}</text>
+      </svg>
+      <div class="match-gauge-label">Ashtakoota</div>
+    </div>`;
+}
+
+function kootaBars(rows, detail) {
+  return `<div class="koota-bars">${Object.entries(rows).map(([name, row]) => {
+    const percent = row.max > 0 ? Math.round((row.score / row.max) * 100) : 0;
+    return `
+      <div class="koota-row">
+        <div class="koota-top">
+          <span class="koota-name">${esc(kootaLabel(name))}${KOOTA_HINDI[name] ? ` <span class="hindi">${esc(KOOTA_HINDI[name])}</span>` : ''}</span>
+          <span class="koota-score"><strong>${row.score}</strong> / ${row.max}</span>
+        </div>
+        <div class="koota-track"><span class="koota-fill" style="width:${percent}%"></span></div>
+        <div class="koota-detail">${detail(name, row)}</div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+function mangalDoshaCard(person, fallbackLabel) {
+  const m = person.mangal_dosha;
+  const label = person.summary.name || fallbackLabel;
+  const flags = [
+    ['Lagna', m.dosha.from_lagna, m.mars_house_from_lagna],
+    ['Moon', m.dosha.from_moon, m.mars_house_from_moon],
+    ['Venus', m.dosha.from_venus, m.mars_house_from_venus],
+  ];
+  return `
+    <div class="dosha-card">
+      <div class="dosha-head">
+        <strong>${esc(label)}</strong>
+        ${m.any ? '<span class="badge bad">Mars flagged</span>' : '<span class="badge good">Mars not flagged</span>'}
+      </div>
+      <p class="small">Mars in <strong>${esc(m.mars_sign)}</strong> · ${m.mars_house_from_lagna}th / ${m.mars_house_from_moon}th / ${m.mars_house_from_venus}th from Lagna / Moon / Venus</p>
+      <div class="dosha-flags">
+        ${flags.map(([name, active, house]) => `<span class="flag${active ? ' on' : ''}">${esc(name)} · H${house}</span>`).join('')}
+      </div>
+      ${m.notes.length ? `<p class="muted small">${m.notes.map(esc).join('<br>')}</p>` : ''}
+      <p class="muted small">${esc(m.convention)}</p>
+    </div>`;
+}
+
 function renderMatch({ match, markdown }) {
   state.match = { match, markdown };
   const el = $('#match-result');
   const a = match.a;
   const b = match.b;
   const k = match.ashtakoota;
+  const groomIsA = match.groom !== 'B';
+  const roleA = groomIsA ? 'Groom' : 'Bride';
+  const roleB = groomIsA ? 'Bride' : 'Groom';
+  const groomName = groomIsA ? (a.summary.name || 'Person A') : (b.summary.name || 'Person B');
+  const brideName = groomIsA ? (b.summary.name || 'Person B') : (a.summary.name || 'Person A');
 
   const detail = (name, row) => {
     if (name === 'varna' || name === 'vashya' || name === 'yoni' || name === 'gana') {
@@ -404,7 +551,7 @@ function renderMatch({ match, markdown }) {
       return `${row.groom_to_bride.remainder} / ${row.bride_to_groom.remainder}`;
     }
     if (name === 'graha_maitri') {
-      return `${esc(row.groom_lord)} (${esc(row.groom_relation)}) / ${esc(row.bride_lord)} (${esc(row.bride_relation)})`;
+      return `${displayPlanetName(row.groom_lord)} (${esc(row.groom_relation)}) / ${displayPlanetName(row.bride_lord)} (${esc(row.bride_relation)})`;
     }
     if (name === 'bhakoot') {
       return `${row.distance}${row.dosha ? ' · dosha' : ''}`;
@@ -415,28 +562,32 @@ function renderMatch({ match, markdown }) {
     return '';
   };
 
-  const kootaTable = table(
-    ['Koota', 'Score', 'Max', 'Detail'],
-    Object.entries(k.rows).map(([name, row]) => [
-      esc(kootaLabel(name)),
-      `<strong>${row.score}</strong>`,
-      row.max,
-      detail(name, row),
-    ]),
-    { numColumns: [1, 2] },
-  );
-
-  const dosha = (person) => {
-    const m = person.mangal_dosha;
-    const label = person.summary.name || (person === a ? 'Person A' : 'Person B');
-    return `
-      <li>
-        <strong>${esc(label)}</strong>:
-        ${m.any ? '<span class="badge bad">present</span>' : '<span class="badge good">not indicated</span>'}
-        <span class="muted small">Mars in ${esc(m.mars_sign)}; houses from lagna ${m.mars_house_from_lagna}, Moon ${m.mars_house_from_moon}, Venus ${m.mars_house_from_venus}</span>
-        ${m.notes.length ? `<div class="muted small">${m.notes.map(esc).join('<br>')}</div>` : ''}
-      </li>`;
-  };
+  const chartA = match.charts?.a?.vargas?.D1;
+  const chartB = match.charts?.b?.vargas?.D1;
+  const charts = chartA && chartB
+    ? `
+      <div class="section">
+        <h3>D1 Charts <span class="hindi">D1 कुंडली</span></h3>
+        <div class="match-chart-grid">
+          <div class="match-chart-card">
+            <div class="match-chart-head">
+              <div><strong>${esc(a.summary.name || 'Person A')}</strong> <span class="badge">${esc(roleA)}</span></div>
+              <span class="muted small">Lagna: ${esc(a.summary.ascendant)}</span>
+            </div>
+            ${northChartSvg(chartA)}
+          </div>
+          <div class="match-chart-card">
+            <div class="match-chart-head">
+              <div><strong>${esc(b.summary.name || 'Person B')}</strong> <span class="badge">${esc(roleB)}</span></div>
+              <span class="muted small">Lagna: ${esc(b.summary.ascendant)}</span>
+            </div>
+            ${northChartSvg(chartB)}
+          </div>
+        </div>
+        ${planetLegend()}
+        <p class="chart-note muted small">Hover a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
+      </div>`
+    : '';
 
   el.innerHTML = `
     <div class="results-head">
@@ -453,25 +604,37 @@ function renderMatch({ match, markdown }) {
     ${table(
       ['', 'Person A', 'Person B'],
       [
-        ['Name', esc(a.summary.name || 'Person A'), esc(b.summary.name || 'Person B')],
-        ['Birth', esc(a.summary.birth.local), esc(b.summary.birth.local)],
-        ['Place', esc(a.summary.place.name || '—'), esc(b.summary.place.name || '—')],
-        ['Lagna', esc(a.summary.ascendant), esc(b.summary.ascendant)],
-        ['Sun', esc(a.summary.sun_sign), esc(b.summary.sun_sign)],
-        ['Moon', `${esc(a.summary.moon_sign)} / ${esc(a.summary.moon_nakshatra)} p${a.summary.moon_pada}`, `${esc(b.summary.moon_sign)} / ${esc(b.summary.moon_nakshatra)} p${b.summary.moon_pada}`],
+        ['Role / भूमिका', esc(roleA), esc(roleB)],
+        ['Name / नाम', esc(a.summary.name || 'Person A'), esc(b.summary.name || 'Person B')],
+        ['Birth / जन्म', esc(a.summary.birth.local), esc(b.summary.birth.local)],
+        ['Place / स्थान', esc(a.summary.place.name || '—'), esc(b.summary.place.name || '—')],
+        ['Lagna / लग्न', esc(a.summary.ascendant), esc(b.summary.ascendant)],
+        ['Sun / सूर्य', esc(a.summary.sun_sign), esc(b.summary.sun_sign)],
+        ['Moon / चंद्र', `${esc(a.summary.moon_sign)} / ${esc(a.summary.moon_nakshatra)} p${a.summary.moon_pada}`, `${esc(b.summary.moon_sign)} / ${esc(b.summary.moon_nakshatra)} p${b.summary.moon_pada}`],
       ],
     )}
 
     <div class="section">
-      <h3>Ashtakoota</h3>
-      <div class="score"><span class="big">${k.score}</span><span class="of">/ ${k.max}</span></div>
-      ${kootaTable}
-      <p class="muted small">${esc(k.note)}</p>
+      <h3>Ashtakoota <span class="hindi">अष्टकूट</span></h3>
+      <div class="match-score-panel">
+        ${scoreGauge(k.score, k.max)}
+        <div class="match-score-copy">
+          <div class="match-pair"><span class="muted small">Groom <span class="hindi">वर</span></span><strong>${esc(groomName)}</strong></div>
+          <div class="match-pair"><span class="muted small">Bride <span class="hindi">वधू</span></span><strong>${esc(brideName)}</strong></div>
+          <p class="muted small">${esc(k.note)}</p>
+        </div>
+      </div>
+      ${kootaBars(k.rows, detail)}
     </div>
 
+    ${charts}
+
     <div class="section">
-      <h3>Mangal Dosha</h3>
-      <ul class="plain">${dosha(a)}${dosha(b)}</ul>
+      <h3>Mangal Dosha <span class="hindi">मंगल दोष</span></h3>
+      <div class="dosha-grid">
+        ${mangalDoshaCard(a, 'Person A')}
+        ${mangalDoshaCard(b, 'Person B')}
+      </div>
     </div>
 
     <div class="section">
@@ -494,6 +657,7 @@ $('#match-form').addEventListener('submit', async (event) => {
   const button = event.target.querySelector('button[type="submit"]');
   button.disabled = true;
   button.textContent = engineReady ? 'Matching…' : 'Loading ephemeris…';
+  showSkeleton('#match-result', 'match');
 
   try {
     const a = readPerson(event.target.querySelector('[data-person="a"]'));
@@ -505,6 +669,7 @@ $('#match-form').addEventListener('submit', async (event) => {
     renderMatch({ match, markdown: matchToMarkdown(match) });
     $('#match-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
+    hideResult('#match-result');
     showError('#match-error', err.message);
   } finally {
     button.disabled = false;
