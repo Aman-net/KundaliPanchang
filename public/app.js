@@ -23,6 +23,84 @@ const PLANET_META = {
 
 const SIGN_ABBR = ['Ar', 'Ta', 'Ge', 'Cn', 'Le', 'Vi', 'Li', 'Sc', 'Sg', 'Cp', 'Aq', 'Pi'];
 
+const SIGN_HINDI = {
+  Aries: 'मेष', Taurus: 'वृषभ', Gemini: 'मिथुन', Cancer: 'कर्क',
+  Leo: 'सिंह', Virgo: 'कन्या', Libra: 'तुला', Scorpio: 'वृश्चिक',
+  Sagittarius: 'धनु', Capricorn: 'मकर', Aquarius: 'कुंभ', Pisces: 'मीन',
+};
+
+const NAKSHATRA_HINDI = {
+  Ashwini: 'अश्विनी', Bharani: 'भरणी', Krittika: 'कृत्तिका', Rohini: 'रोहिणी',
+  Mrigashira: 'मृगशिरा', Ardra: 'आर्द्रा', Punarvasu: 'पुनर्वसु', Pushya: 'पुष्य',
+  Ashlesha: 'आश्लेषा', Magha: 'मघा', 'Purva Phalguni': 'पूर्व फाल्गुनी',
+  'Uttara Phalguni': 'उत्तर फाल्गुनी', Hasta: 'हस्त', Chitra: 'चित्रा',
+  Swati: 'स्वाति', Vishakha: 'विशाखा', Anuradha: 'अनुराधा', Jyeshtha: 'ज्येष्ठा',
+  Mula: 'मूल', 'Purva Ashadha': 'पूर्वाषाढ़ा', 'Uttara Ashadha': 'उत्तराषाढ़ा',
+  Shravana: 'श्रवण', Dhanishta: 'धनिष्ठा', Shatabhisha: 'शतभिषा',
+  'Purva Bhadrapada': 'पूर्व भाद्रपद', 'Uttara Bhadrapada': 'उत्तर भाद्रपद', Revati: 'रेवती',
+};
+
+const TITHI_HINDI = {
+  Pratipada: 'प्रतिपदा', Dwitiya: 'द्वितीया', Tritiya: 'तृतीया', Chaturthi: 'चतुर्थी',
+  Panchami: 'पंचमी', Shashthi: 'षष्ठी', Saptami: 'सप्तमी', Ashtami: 'अष्टमी',
+  Navami: 'नवमी', Dashami: 'दशमी', Ekadashi: 'एकादशी', Dwadashi: 'द्वादशी',
+  Trayodashi: 'त्रयोदशी', Chaturdashi: 'चतुर्दशी', Purnima: 'पूर्णिमा', Amavasya: 'अमावस्या',
+};
+
+const PAKSHA_HINDI = { Shukla: 'शुक्ल', Krishna: 'कृष्ण' };
+
+const YOGA_HINDI = {
+  Vishkambha: 'विष्कंभ', Priti: 'प्रीति', Ayushman: 'आयुष्मान', Saubhagya: 'सौभाग्य',
+  Shobhana: 'शोभन', Atiganda: 'अतिगंड', Sukarma: 'सुकर्मा', Dhriti: 'धृति',
+  Shula: 'शूल', Ganda: 'गंड', Vriddhi: 'वृद्धि', Dhruva: 'ध्रुव',
+  Vyaghata: 'व्याघात', Harshana: 'हर्षण', Vajra: 'वज्र', Siddhi: 'सिद्धि',
+  Vyatipata: 'व्यतीपात', Variyana: 'वरीयान', Parigha: 'परिघ', Shiva: 'शिव',
+  Siddha: 'सिद्ध', Sadhya: 'साध्य', Shubha: 'शुभ', Shukla: 'शुक्ल',
+  Brahma: 'ब्रह्म', Indra: 'इंद्र', Vaidhriti: 'वैधृति',
+};
+
+const KARANA_HINDI = {
+  Kimstughna: 'किंस्तुघ्न', Bava: 'बव', Balava: 'बालव', Kaulava: 'कौलव',
+  Taitila: 'तैतिल', Gara: 'गर', Vanija: 'वणिज', Vishti: 'विष्टि',
+  Shakuni: 'शकुनि', Chatushpada: 'चतुष्पद', Naga: 'नाग',
+};
+
+const VARA_HINDI = {
+  Sunday: 'रविवार', Monday: 'सोमवार', Tuesday: 'मंगलवार', Wednesday: 'बुधवार',
+  Thursday: 'गुरुवार', Friday: 'शुक्रवार', Saturday: 'शनिवार',
+};
+
+const DIGNITY_HINDI = {
+  exalted: 'उच्च', debilitated: 'नीच', moolatrikona: 'मूलत्रिकोण',
+  own: 'स्वराशि', friend: 'मित्र', enemy: 'शत्रु', neutral: 'सम', unknown: 'अज्ञात',
+};
+
+const VARGA_HINDI = {
+  D1: 'राशि', D2: 'होरा', D3: 'द्रेक्काण', D4: 'चतुर्थांश', D7: 'सप्तमांश',
+  D9: 'नवांश', D10: 'दशमांश', D12: 'द्वादशांश', D16: 'षोडशांश', D20: 'विंशांश',
+  D24: 'चतुर्विंशांश', D27: 'भांश', D30: 'त्रिंशांश', D40: 'खवेदांश',
+  D45: 'अक्षवेदांश', D60: 'षष्ट्यंश',
+};
+
+const VARNA_HINDI = {
+  Brahmin: 'ब्राह्मण', Kshatriya: 'क्षत्रिय', Vaishya: 'वैश्य', Shudra: 'शूद्र',
+};
+
+const VASHYA_HINDI = {
+  Chatushpada: 'चतुष्पद', Manava: 'मानव', Jalachara: 'जलचर',
+  Vanachara: 'वनचर', Keeta: 'कीट',
+};
+
+const YONI_HINDI = {
+  Horse: 'अश्व', Elephant: 'गज', Sheep: 'मेष', Serpent: 'सर्प', Dog: 'श्वान',
+  Cat: 'मार्जार', Rat: 'मूषक', Cow: 'गौ', Buffalo: 'महिष', Tiger: 'व्याघ्र',
+  Deer: 'मृग', Monkey: 'वानर', Mongoose: 'नकुल', Lion: 'सिंह',
+};
+
+const GANA_HINDI = { Deva: 'देव', Manushya: 'मनुष्य', Rakshasa: 'राक्षस' };
+const NADI_HINDI = { Aadi: 'आदि', Madhya: 'मध्य', Antya: 'अन्त्य' };
+const RELATION_HINDI = { friend: 'मित्र', neutral: 'सम', enemy: 'शत्रु' };
+
 // Fixed North Indian house geometry. House 1 is the top-centre diamond and the
 // houses run anti-clockwise; the sign numbers rotate with the ascendant.
 const NORTH_CELLS = [
@@ -76,6 +154,24 @@ $$('.tab').forEach((tab) => {
 
 /* ---------------- chart ---------------- */
 
+const vargaCheckboxes = $$('#varga-chips input:not(:disabled)');
+const selectAllVargas = $('#select-all-vargas');
+
+function syncVargaSelectAll() {
+  const allSelected = vargaCheckboxes.length > 0 && vargaCheckboxes.every((input) => input.checked);
+  selectAllVargas.textContent = allSelected ? 'Clear all / सभी हटाएँ' : 'Select all / सभी चुनें';
+  selectAllVargas.setAttribute('aria-pressed', String(allSelected));
+}
+
+selectAllVargas.addEventListener('click', () => {
+  const select = !vargaCheckboxes.every((input) => input.checked);
+  vargaCheckboxes.forEach((input) => { input.checked = select; });
+  syncVargaSelectAll();
+});
+
+vargaCheckboxes.forEach((input) => input.addEventListener('change', syncVargaSelectAll));
+syncVargaSelectAll();
+
 function readChartInput(form) {
   const get = (name) => form.elements[name];
   const vargas = $$('#varga-chips input:checked').map((i) => i.value);
@@ -118,6 +214,31 @@ function planetName(name) {
     : `<strong>${esc(name)}</strong>`;
 }
 
+function bilingual(name, map) {
+  const hindi = map?.[name];
+  return `${esc(name)}${hindi ? ` <span class="hindi" lang="hi">${esc(hindi)}</span>` : ''}`;
+}
+
+const signName = (name) => bilingual(name, SIGN_HINDI);
+const nakshatraName = (name) => bilingual(name, NAKSHATRA_HINDI);
+const dignityName = (name) => bilingual(name, DIGNITY_HINDI);
+const varaName = (name) => bilingual(name, VARA_HINDI);
+const yogaName = (name) => bilingual(name, YOGA_HINDI);
+const karanaName = (name) => bilingual(name, KARANA_HINDI);
+const lagnaName = () => 'Lagna <span class="hindi" lang="hi">लग्न</span>';
+
+function tithiName(paksha, name) {
+  return `${bilingual(paksha, PAKSHA_HINDI)} ${bilingual(name, TITHI_HINDI)}`;
+}
+
+function planetInline(name) {
+  if (name === 'Lagna') return lagnaName();
+  const meta = PLANET_META[name];
+  return meta
+    ? `${esc(name)} <span class="hindi" lang="hi">${esc(meta.hindi)}</span>`
+    : esc(name);
+}
+
 function planetLegend() {
   return `<div class="chart-legend">${Object.entries(PLANET_META)
     .map(([name, meta]) => `<span><strong>${meta.abbr}</strong> ${esc(name)} <span class="hindi" lang="hi">${esc(meta.hindi)}</span></span>`)
@@ -150,7 +271,7 @@ function northChartSvg(varga) {
 
     return `
       <g class="chart-house-group" data-house="${index + 1}">
-        <title>House ${index + 1} · ${esc(sign)}${lagna}</title>
+        <title>House ${index + 1} · ${esc(sign)} / ${esc(SIGN_HINDI[sign] ?? '')}${lagna}</title>
         <polygon class="chart-house${index === 0 ? ' lagna-house' : ''}" points="${cell.points}" />
         <text class="chart-sign" x="${cell.x}" y="${cell.signY}" text-anchor="middle">${esc(signLabel)}</text>
         ${index === 0 ? `<text class="chart-lagna" x="${cell.x}" y="${cell.signY + 14}" text-anchor="middle">Lagna</text>` : ''}
@@ -171,10 +292,10 @@ function northIndianChart(varga) {
     <div class="chart-card">
       <div class="chart-card-head">
         <div>
-          <strong>${esc(varga.varga)} · ${esc(varga.name)}</strong>
+          <strong>${esc(varga.varga)} · ${esc(varga.name)} <span class="hindi" lang="hi">${esc(VARGA_HINDI[varga.varga] ?? '')}</span></strong>
           <span class="muted small"> · North Indian</span>
         </div>
-        <span class="muted small">Lagna / लग्न: ${esc(varga.ascendant_sign)}</span>
+        <span class="muted small">Lagna / लग्न: ${signName(varga.ascendant_sign)}</span>
       </div>
       ${northChartSvg(varga)}
       ${planetLegend()}
@@ -251,24 +372,24 @@ function renderChart({ chart, markdown }) {
   const s = c.summary;
 
   const summary = [
-    ['Lagna', s.ascendant.sign, `${num(s.ascendant.degree_in_sign)}° · ${s.ascendant.nakshatra} p${s.ascendant.pada}`],
-    ['Sun sign', s.sun_sign, ''],
-    ['Moon sign', s.moon_sign, `${s.moon_nakshatra} p${s.moon_pada}`],
-    ['Vara', s.vara, ''],
-    ['Tithi', `${s.tithi}`, ''],
-    ['Ayanamsa', `${num(c.conventions.ayanamsa_value, 4)}°`, c.conventions.ayanamsa],
+    ['Lagna / लग्न', signName(s.ascendant.sign), `${num(s.ascendant.degree_in_sign)}° · ${nakshatraName(s.ascendant.nakshatra)} p${s.ascendant.pada}`],
+    ['Sun sign / सूर्य राशि', signName(s.sun_sign), ''],
+    ['Moon sign / चंद्र राशि', signName(s.moon_sign), `${nakshatraName(s.moon_nakshatra)} p${s.moon_pada}`],
+    ['Vara / वार', varaName(s.vara), ''],
+    ['Tithi / तिथि', tithiName(c.panchang.tithi.paksha, c.panchang.tithi.name), ''],
+    ['Ayanamsa / अयनांश', `${num(c.conventions.ayanamsa_value, 4)}°`, c.conventions.ayanamsa],
   ];
 
   const planets = table(
-    ['Planet / ग्रह', 'Sign', 'Degree', 'Nakshatra', 'Pada', 'House', 'Dignity', 'R', 'Combust'],
+    ['Planet / ग्रह', 'Sign / राशि', 'Degree', 'Nakshatra / नक्षत्र', 'Pada', 'House / भाव', 'Dignity / स्थिति', 'R / वक्री', 'Combust / अस्त'],
     c.planets.map((p) => [
       planetName(p.id),
-      esc(p.sign),
+      signName(p.sign),
       num(p.degree_in_sign),
-      esc(p.nakshatra),
+      nakshatraName(p.nakshatra),
       p.pada,
       p.house,
-      esc(p.dignity),
+      dignityName(p.dignity),
       p.retrograde ? 'Y' : '',
       p.combust ? 'Y' : '',
     ]),
@@ -276,32 +397,32 @@ function renderChart({ chart, markdown }) {
   );
 
   const houses = table(
-    ['House', 'Sign', 'Lord', 'Lord in', 'Occupants', 'Sripati', 'Bhava madhya'],
+    ['House / भाव', 'Sign / राशि', 'Lord / स्वामी', 'Lord in', 'Occupants', 'Sripati', 'Bhava madhya'],
     c.houses.map((h) => [
       h.house,
-      esc(h.sign),
+      signName(h.sign),
       planetName(h.lord),
       h.lord_house ?? '—',
-      h.occupants.length ? h.occupants.map(esc).join(', ') : '—',
-      c.bhava_chalit[h.house - 1].planets.length ? c.bhava_chalit[h.house - 1].planets.map(esc).join(', ') : '—',
+      h.occupants.length ? h.occupants.map(planetInline).join(', ') : '—',
+      c.bhava_chalit[h.house - 1].planets.length ? c.bhava_chalit[h.house - 1].planets.map(planetInline).join(', ') : '—',
       `${num(h.sripati_bhava_madhya)}°`,
     ]),
     { numColumns: [0, 3, 6] },
   );
 
   const aspects = c.aspects.length
-    ? `<ul class="plain">${c.aspects.map((a) => `<li>${esc(a.from)} → ${esc(a.to)} <span class="muted">(${a.house_distance}${a.special ? ', special' : ''})</span></li>`).join('')}</ul>`
+    ? `<ul class="plain">${c.aspects.map((a) => `<li>${planetInline(a.from)} → ${planetInline(a.to)} <span class="muted">(${a.house_distance}${a.special ? ', special' : ''})</span></li>`).join('')}</ul>`
     : '<p class="muted">No aspects.</p>';
 
   const conjunctions = c.conjunctions.length
-    ? `<ul class="plain">${c.conjunctions.map((x) => `<li>${x.planets.map(esc).join(' + ')} in ${esc(x.sign)} <span class="muted">(${num(x.orb)}° apart)</span></li>`).join('')}</ul>`
+    ? `<ul class="plain">${c.conjunctions.map((x) => `<li>${x.planets.map(planetInline).join(' + ')} in ${signName(x.sign)} <span class="muted">(${num(x.orb)}° apart)</span></li>`).join('')}</ul>`
     : '<p class="muted">No same-sign conjunctions.</p>';
 
   const vargas = Object.entries(c.vargas)
     .filter(([key]) => key !== 'D1')
     .map(([key, v]) => `
       <div class="section">
-        <h3>${key} — ${esc(v.name)}</h3>
+        <h3>${key} — ${esc(v.name)} <span class="hindi" lang="hi">${esc(VARGA_HINDI[key] ?? '')}</span></h3>
         ${northIndianChart(v)}
       </div>`)
     .join('');
@@ -345,18 +466,18 @@ function renderChart({ chart, markdown }) {
       ${summary.map(([k, v, sub]) => `
         <div class="summary-item">
           <div class="k">${esc(k)}</div>
-          <div class="v">${esc(v)}</div>
-          ${sub ? `<div class="s">${esc(sub)}</div>` : ''}
+          <div class="v">${v}</div>
+          ${sub ? `<div class="s">${sub}</div>` : ''}
         </div>`).join('')}
     </div>
 
     <div class="section">
-      <h3>Planets</h3>
+      <h3>Planets <span class="hindi" lang="hi">ग्रह</span></h3>
       ${planets}
     </div>
 
     <div class="section">
-      <h3>Houses (whole sign)</h3>
+      <h3>Houses (whole sign) <span class="hindi" lang="hi">भाव</span></h3>
       ${northIndianChart(c.vargas.D1 || { varga: 'D1', name: 'Rashi', ascendant_sign: c.summary.ascendant.sign, ascendant_sign_index: c.summary.ascendant.sign_index, houses: [] })}
       <div style="height:14px"></div>
       ${houses}
@@ -364,15 +485,15 @@ function renderChart({ chart, markdown }) {
     </div>
 
     <div class="section">
-      <h3>Birth Panchang</h3>
+      <h3>Birth Panchang <span class="hindi" lang="hi">जन्म पंचांग</span></h3>
       ${table(
-        ['Vara', 'Tithi', 'Nakshatra', 'Yoga', 'Karana', 'Sunrise', 'Sunset', 'Moonrise', 'Moonset'],
+        ['Vara / वार', 'Tithi / तिथि', 'Nakshatra / नक्षत्र', 'Yoga / योग', 'Karana / करण', 'Sunrise / सूर्योदय', 'Sunset / सूर्यास्त', 'Moonrise / चंद्रोदय', 'Moonset / चंद्रास्त'],
         [[
-          esc(pc.vara),
-          `${esc(pc.tithi.paksha)} ${esc(pc.tithi.name)}`,
-          `${esc(pc.nakshatra.name)} p${pc.nakshatra.pada}`,
-          esc(pc.yoga.name),
-          esc(pc.karana.name),
+          varaName(pc.vara),
+          tithiName(pc.tithi.paksha, pc.tithi.name),
+          `${nakshatraName(pc.nakshatra.name)} p${pc.nakshatra.pada}`,
+          yogaName(pc.yoga.name),
+          karanaName(pc.karana.name),
           esc(pc.sunrise || '—'),
           esc(pc.sunset || '—'),
           esc(pc.moonrise || '—'),
@@ -383,17 +504,17 @@ function renderChart({ chart, markdown }) {
     </div>
 
     <div class="section">
-      <h3>Aspects</h3>
+      <h3>Aspects <span class="hindi" lang="hi">दृष्टि</span></h3>
       ${aspects}
-      <h4>Conjunctions</h4>
+      <h4>Conjunctions <span class="hindi" lang="hi">युति</span></h4>
       ${conjunctions}
     </div>
 
     ${vargas}
 
     <div class="section">
-      <h3>Vimshottari Dasha</h3>
-      <p class="muted small">Balance at birth: ${planetName(c.dasha.balance_at_birth.lord)} ${num(c.dasha.balance_at_birth.years, 2)} years (Moon in ${esc(c.dasha.birth_nakshatra)}).</p>
+      <h3>Vimshottari Dasha <span class="hindi" lang="hi">विंशोत्तरी दशा</span></h3>
+      <p class="muted small">Balance at birth: ${planetName(c.dasha.balance_at_birth.lord)} ${num(c.dasha.balance_at_birth.years, 2)} years (Moon in ${nakshatraName(c.dasha.birth_nakshatra)}).</p>
       ${c.dasha.current ? `<p class="small">Current: ${planetName(c.dasha.current.mahadasha.lord)}${c.dasha.current.antardasha ? ` / ${planetName(c.dasha.current.antardasha.lord)}` : ''} <span class="muted">(as of ${esc(c.dasha.current.as_of)})</span></p>` : ''}
       ${table(['Mahadasha', 'Years', 'Start', 'End', ''], dashaRows, { numColumns: [1] })}
       <h4>Antardashas</h4>
@@ -512,9 +633,9 @@ function mangalDoshaCard(person, fallbackLabel) {
   const m = person.mangal_dosha;
   const label = person.summary.name || fallbackLabel;
   const flags = [
-    ['Lagna', m.dosha.from_lagna, m.mars_house_from_lagna],
-    ['Moon', m.dosha.from_moon, m.mars_house_from_moon],
-    ['Venus', m.dosha.from_venus, m.mars_house_from_venus],
+    ['Lagna / लग्न', m.dosha.from_lagna, m.mars_house_from_lagna],
+    ['Moon / चंद्र', m.dosha.from_moon, m.mars_house_from_moon],
+    ['Venus / शुक्र', m.dosha.from_venus, m.mars_house_from_venus],
   ];
   return `
     <div class="dosha-card">
@@ -522,7 +643,7 @@ function mangalDoshaCard(person, fallbackLabel) {
         <strong>${esc(label)}</strong>
         ${m.any ? '<span class="badge bad">Mars flagged</span>' : '<span class="badge good">Mars not flagged</span>'}
       </div>
-      <p class="small">Mars in <strong>${esc(m.mars_sign)}</strong> · ${m.mars_house_from_lagna}th / ${m.mars_house_from_moon}th / ${m.mars_house_from_venus}th from Lagna / Moon / Venus</p>
+      <p class="small">${planetInline('Mars')} in ${signName(m.mars_sign)} · ${m.mars_house_from_lagna}th / ${m.mars_house_from_moon}th / ${m.mars_house_from_venus}th from Lagna / Moon / Venus</p>
       <div class="dosha-flags">
         ${flags.map(([name, active, house]) => `<span class="flag${active ? ' on' : ''}">${esc(name)} · H${house}</span>`).join('')}
       </div>
@@ -544,20 +665,29 @@ function renderMatch({ match, markdown }) {
   const brideName = groomIsA ? (b.summary.name || 'Person B') : (a.summary.name || 'Person A');
 
   const detail = (name, row) => {
-    if (name === 'varna' || name === 'vashya' || name === 'yoni' || name === 'gana') {
-      return `${esc(row.groom)} / ${esc(row.bride)}`;
+    if (name === 'varna') {
+      return `${bilingual(row.groom, VARNA_HINDI)} / ${bilingual(row.bride, VARNA_HINDI)}`;
+    }
+    if (name === 'vashya') {
+      return `${bilingual(row.groom, VASHYA_HINDI)} / ${bilingual(row.bride, VASHYA_HINDI)}`;
+    }
+    if (name === 'yoni') {
+      return `${bilingual(row.groom, YONI_HINDI)} / ${bilingual(row.bride, YONI_HINDI)}`;
+    }
+    if (name === 'gana') {
+      return `${bilingual(row.groom, GANA_HINDI)} / ${bilingual(row.bride, GANA_HINDI)}`;
     }
     if (name === 'tara') {
       return `${row.groom_to_bride.remainder} / ${row.bride_to_groom.remainder}`;
     }
     if (name === 'graha_maitri') {
-      return `${displayPlanetName(row.groom_lord)} (${esc(row.groom_relation)}) / ${displayPlanetName(row.bride_lord)} (${esc(row.bride_relation)})`;
+      return `${displayPlanetName(row.groom_lord)} (${bilingual(row.groom_relation, RELATION_HINDI)}) / ${displayPlanetName(row.bride_lord)} (${bilingual(row.bride_relation, RELATION_HINDI)})`;
     }
     if (name === 'bhakoot') {
-      return `${row.distance}${row.dosha ? ' · dosha' : ''}`;
+      return `${row.distance}${row.dosha ? ' · dosha / दोष' : ''}`;
     }
     if (name === 'nadi') {
-      return `${esc(row.groom)} / ${esc(row.bride)}${row.dosha ? ' · dosha' : ''}`;
+      return `${bilingual(row.groom, NADI_HINDI)} / ${bilingual(row.bride, NADI_HINDI)}${row.dosha ? ' · dosha / दोष' : ''}`;
     }
     return '';
   };
@@ -572,14 +702,14 @@ function renderMatch({ match, markdown }) {
           <div class="match-chart-card">
             <div class="match-chart-head">
               <div><strong>${esc(a.summary.name || 'Person A')}</strong> <span class="badge">${esc(roleA)}</span></div>
-              <span class="muted small">Lagna: ${esc(a.summary.ascendant)}</span>
+              <span class="muted small">Lagna / लग्न: ${signName(a.summary.ascendant)}</span>
             </div>
             ${northChartSvg(chartA)}
           </div>
           <div class="match-chart-card">
             <div class="match-chart-head">
               <div><strong>${esc(b.summary.name || 'Person B')}</strong> <span class="badge">${esc(roleB)}</span></div>
-              <span class="muted small">Lagna: ${esc(b.summary.ascendant)}</span>
+              <span class="muted small">Lagna / लग्न: ${signName(b.summary.ascendant)}</span>
             </div>
             ${northChartSvg(chartB)}
           </div>
@@ -608,9 +738,9 @@ function renderMatch({ match, markdown }) {
         ['Name / नाम', esc(a.summary.name || 'Person A'), esc(b.summary.name || 'Person B')],
         ['Birth / जन्म', esc(a.summary.birth.local), esc(b.summary.birth.local)],
         ['Place / स्थान', esc(a.summary.place.name || '—'), esc(b.summary.place.name || '—')],
-        ['Lagna / लग्न', esc(a.summary.ascendant), esc(b.summary.ascendant)],
-        ['Sun / सूर्य', esc(a.summary.sun_sign), esc(b.summary.sun_sign)],
-        ['Moon / चंद्र', `${esc(a.summary.moon_sign)} / ${esc(a.summary.moon_nakshatra)} p${a.summary.moon_pada}`, `${esc(b.summary.moon_sign)} / ${esc(b.summary.moon_nakshatra)} p${b.summary.moon_pada}`],
+        ['Lagna / लग्न', signName(a.summary.ascendant), signName(b.summary.ascendant)],
+        ['Sun / सूर्य', signName(a.summary.sun_sign), signName(b.summary.sun_sign)],
+        ['Moon / चंद्र', `${signName(a.summary.moon_sign)} / ${nakshatraName(a.summary.moon_nakshatra)} p${a.summary.moon_pada}`, `${signName(b.summary.moon_sign)} / ${nakshatraName(b.summary.moon_nakshatra)} p${b.summary.moon_pada}`],
       ],
     )}
 

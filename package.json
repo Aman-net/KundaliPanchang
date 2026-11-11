@@ -16,13 +16,14 @@
     "preview": "vite preview",
     "api": "node src/server.js",
     "cli": "node src/cli.js",
-    "validate": "node scripts/validate-ascendant.js"
+    "validate": "node scripts/validate-core.js && node scripts/validate-ascendant.js"
   },
   "dependencies": {
     "express": "^4.22.3",
     "sweph-wasm": "^2.6.9"
   },
   "devDependencies": {
+    "astronomy-engine": "^2.1.19",
     "vite": "^8.3.8"
   },
   "engines": {

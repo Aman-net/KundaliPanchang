@@ -56,14 +56,14 @@ export function dignityOf(key, longitude) {
   const exalt = EXALTATION[key];
   const debil = (exalt.sign + 6) % 12;
 
-  if (sign === exalt.sign) return 'exalted';
-  if (sign === debil) return 'debilitated';
-
   const mt = MOOLATRIKONA[key];
   if (mt && sign === mt.sign) {
     const deg = degreeInSign(longitude);
     if (deg >= mt.start && deg < mt.end) return 'moolatrikona';
   }
+
+  if (sign === exalt.sign) return 'exalted';
+  if (sign === debil) return 'debilitated';
 
   if (OWN_SIGNS[key]?.includes(sign)) return 'own';
 
@@ -218,7 +218,8 @@ export function vargaSign(longitude, varga) {
 
     case 'D60': {
       const part = Math.floor(deg / 0.5);
-      return (sign + part) % 12;
+      const start = isOddSign(sign) ? sign : (sign + 6) % 12;
+      return (start + part) % 12;
     }
 
     default:
@@ -462,8 +463,8 @@ export function vashyaScore(a, b) {
   return VASHYA_SCORES[i][j];
 }
 
-export function taraScore(groomNak, brideNak) {
-  const count = ((groomNak - brideNak + 27) % 27) + 1;
+export function taraScore(fromNak, toNak) {
+  const count = ((toNak - fromNak + 27) % 27) + 1;
   const remainder = count % 9 === 0 ? 9 : count % 9;
   const bad = [3, 5, 7].includes(remainder);
   return { score: bad ? 0 : 1.5, count, remainder, bad };

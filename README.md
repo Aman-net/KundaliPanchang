@@ -55,7 +55,7 @@ curl -L -o static/ephe/seas_18.se1 https://raw.githubusercontent.com/aloistr/swi
 npm start
 ```
 
-Open <http://localhost:5173>. Two tabs: **Chart** (one birth at a time) and **Match** (two charts). The chart diagrams are North Indian; planet tables and dasha labels show English with Hindi names.
+Open <http://localhost:5173>. Two tabs: **Chart** (one birth at a time) and **Match** (two charts). The chart diagrams are North Indian. UI labels are bilingual (English + Hindi) for planets, signs, nakshatras, tithi/yoga/karana/vara, dignities, dasha lords, divisional charts, and match kootas.
 
 The UI computes everything in the browser. The first calculation downloads the Wasm engine and the three ephemeris files (about 2.6 MB); later calculations are instant. Chart data never leaves the browser.
 
@@ -66,11 +66,13 @@ npm run api
 # http://localhost:3000
 ```
 
-To re-run the independent ascendant check:
+To run the full validation suite:
 
 ```bash
 npm run validate
 ```
+
+This runs 16 calculation groups plus the independent ascendant check. It covers timezone/DST conversion, Julian Day, Lahiri ayanamsa, planetary longitudes against Astronomy Engine, nakshatra/pada boundaries, whole-sign houses, all divisional-chart rules, dignity, combustion, aspects, Vimshottari dasha, Ashtakoota, Mangal dosha, panchang boundaries, USNO rise/set fixtures, and the Purnima end time.
 
 ## Build and deploy
 
@@ -133,9 +135,18 @@ Response: `{ "chart": { ... }, "markdown": "..." }`.
 
 ## Validation performed
 
-- **Sunrise/sunset** vs USNO for Banda (2000-01-01 and 2000-08-15): agreement to the minute.
-- **Ascendant** vs an independent Meeus sidereal-time formula: within 0.25 arcminutes.
-- **Tithi** vs USNO full-moon time for 2000-08-15: computed Purnima ends ~10:42 IST, USNO says 10:43.
+`npm run validate` is the source of truth. Current results:
+
+- **Planetary longitudes** vs the independent Astronomy Engine ephemeris: worst difference 7.6 arcseconds for the fixture chart.
+- **Ascendant** vs an independent Meeus sidereal-time formula: within 0.23 arcminutes.
+- **Sunrise/sunset/moonrise/moonset** vs USNO for Banda on 2000-08-15: agreement within one minute.
+- **Purnima end** vs USNO: independent search gives 10:42:34 IST; USNO says 10:43.
+- **Vimshottari dasha:** balance, lord sequence, 120-year total, antardasha totals, and current period checked against the fixture.
+- **Ashtakoota:** all eight row scores, Tara direction, 7.5/36 fixture total, and groom/bride swap behavior checked.
+- **Mangal dosha:** houses from Lagna, Moon, and Venus checked for both fixture charts.
+- **Divisional charts:** boundary cases for D1–D60 checked, including the even-sign D60 start rule.
+- **Dignity:** moolatrikona priority, exaltation, debilitation, own sign, and natural friendship checked.
+- **Panchang:** tithi, paksha, nakshatra/pada, yoga, karana, and vara boundaries checked.
 - **Ephemeris files** confirmed active: SWIEPH and MOSEPH differ (Sun ~0.02″, Moon ~0.45″).
 
 ## Limits
