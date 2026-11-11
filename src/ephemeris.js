@@ -2,10 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { SE, FLAGS_SIDEREAL } from './se.js';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const EPHE_DIR = path.resolve(__dirname, '..', 'ephe');
+export const EPHE_DIR = path.resolve(__dirname, '..', 'static', 'ephe');
+
+export { SE, FLAGS_SIDEREAL };
 
 let shimInstalled = false;
 
@@ -47,36 +50,6 @@ function installFetchShim() {
   };
 }
 
-export const SE = {
-  SUN: 0,
-  MOON: 1,
-  MERCURY: 2,
-  VENUS: 3,
-  MARS: 4,
-  JUPITER: 5,
-  SATURN: 6,
-  URANUS: 7,
-  NEPTUNE: 8,
-  PLUTO: 9,
-  MEAN_NODE: 10,
-  TRUE_NODE: 11,
-
-  FLG_SWIEPH: 2,
-  FLG_MOSEPH: 4,
-  FLG_SPEED: 256,
-  FLG_SIDEREAL: 65536,
-
-  CALC_RISE: 1,
-  CALC_SET: 2,
-  CALC_MTRANSIT: 4,
-  CALC_ITRANSIT: 8,
-
-  SIDM_LAHIRI: 1,
-};
-
-/** Sidereal, with speed, using the Swiss ephemeris files. */
-export const FLAGS_SIDEREAL = SE.FLG_SWIEPH | SE.FLG_SPEED | SE.FLG_SIDEREAL;
-
 let instancePromise = null;
 
 export function getEphemeris() {
@@ -85,7 +58,7 @@ export function getEphemeris() {
       installFetchShim();
       const SwissEPH = require('sweph-wasm');
       const swe = await SwissEPH.init();
-      // Default file list is sepl_18 / semo_18 / seas_18, served from ./ephe.
+      // Default file list is sepl_18 / semo_18 / seas_18, served from ./static/ephe.
       const log = console.log;
       console.log = () => {};
       try {

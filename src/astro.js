@@ -1,4 +1,5 @@
-import { getEphemeris, SE, FLAGS_SIDEREAL } from './ephemeris.js';
+import { getEphemeris } from './ephemeris.js';
+import { SE, FLAGS_SIDEREAL } from './se.js';
 
 const BODY_IDS = {
   sun: SE.SUN,

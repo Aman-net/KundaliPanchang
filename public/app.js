@@ -1,7 +1,12 @@
+import { buildChart } from '../src/chart.js';
+import { matchCharts } from '../src/match.js';
+import { chartToMarkdown, matchToMarkdown } from '../src/format.js';
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 const state = { chart: null, match: null };
+let engineReady = false;
 
 function esc(value) {
   return String(value ?? '')
@@ -25,17 +30,6 @@ function download(filename, text, type) {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-}
-
-async function postJson(url, body) {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-  return data;
 }
 
 /* ---------------- tabs ---------------- */
@@ -273,11 +267,12 @@ $('#chart-form').addEventListener('submit', async (event) => {
   clearError('#chart-error');
   const button = event.target.querySelector('button[type="submit"]');
   button.disabled = true;
-  button.textContent = 'Calculating…';
+  button.textContent = engineReady ? 'Calculating…' : 'Loading ephemeris…';
 
   try {
-    const data = await postJson('/api/chart', readChartInput(event.target));
-    renderChart(data);
+    const chart = await buildChart(readChartInput(event.target));
+    engineReady = true;
+    renderChart({ chart, markdown: chartToMarkdown(chart) });
     $('#chart-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     showError('#chart-error', err.message);
@@ -413,14 +408,16 @@ $('#match-form').addEventListener('submit', async (event) => {
   clearError('#match-error');
   const button = event.target.querySelector('button[type="submit"]');
   button.disabled = true;
-  button.textContent = 'Matching…';
+  button.textContent = engineReady ? 'Matching…' : 'Loading ephemeris…';
 
   try {
     const a = readPerson(event.target.querySelector('[data-person="a"]'));
     const b = readPerson(event.target.querySelector('[data-person="b"]'));
     const groom = event.target.elements.groom.value;
-    const data = await postJson('/api/match', { a, b, groom });
-    renderMatch(data);
+    const [chartA, chartB] = await Promise.all([buildChart(a), buildChart(b)]);
+    engineReady = true;
+    const match = matchCharts(chartA, chartB, { groom });
+    renderMatch({ match, markdown: matchToMarkdown(match) });
     $('#match-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     showError('#match-error', err.message);

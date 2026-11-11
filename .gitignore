@@ -1,4 +1,7 @@
 node_modules/
+dist/
+.vercel/
+static/wasm/
 server.log
 *.log
 Thumbs.db
