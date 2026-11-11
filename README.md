@@ -5,6 +5,7 @@ A Vedic birth-chart **data generator**. It computes the chart and the determinis
 ## What it computes
 
 - **Charts:** D1 (Rashi), D9 (Navamsa), D10 (Dashamsha) by default; D2–D60 selectable.
+- **North Indian diagrams:** D1/D9/D10 rendered as interactive North Indian charts with English + Hindi planet labels. South Indian layout is not implemented yet.
 - **Planets:** sidereal longitude, sign, degree, nakshatra + pada, house, dignity, retrogression, combustion.
 - **Houses:** whole-sign (rashi) primary, plus Sripati bhava madhya, boundaries and bhava-chalit placements.
 - **Reference charts:** Moon chart (Chandra lagna) and Sun chart (Surya lagna).
@@ -54,7 +55,7 @@ curl -L -o static/ephe/seas_18.se1 https://raw.githubusercontent.com/aloistr/swi
 npm start
 ```
 
-Open <http://localhost:5173>. Two tabs: **Chart** (one birth at a time) and **Match** (two charts).
+Open <http://localhost:5173>. Two tabs: **Chart** (one birth at a time) and **Match** (two charts). The chart diagrams are North Indian; planet tables and dasha labels show English with Hindi names.
 
 The UI computes everything in the browser. The first calculation downloads the Wasm engine and the three ephemeris files (about 2.6 MB); later calculations are instant. Chart data never leaves the browser.
 

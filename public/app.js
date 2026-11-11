@@ -1,12 +1,44 @@
 import { buildChart } from '../src/chart.js';
 import { matchCharts } from '../src/match.js';
 import { chartToMarkdown, matchToMarkdown } from '../src/format.js';
+import { SIGNS } from '../src/constants.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 const state = { chart: null, match: null };
 let engineReady = false;
+
+const PLANET_META = {
+  Sun: { key: 'sun', abbr: 'Su', hindi: 'सूर्य' },
+  Moon: { key: 'moon', abbr: 'Mo', hindi: 'चंद्र' },
+  Mars: { key: 'mars', abbr: 'Ma', hindi: 'मंगल' },
+  Mercury: { key: 'mercury', abbr: 'Me', hindi: 'बुध' },
+  Jupiter: { key: 'jupiter', abbr: 'Ju', hindi: 'गुरु' },
+  Venus: { key: 'venus', abbr: 'Ve', hindi: 'शुक्र' },
+  Saturn: { key: 'saturn', abbr: 'Sa', hindi: 'शनि' },
+  Rahu: { key: 'rahu', abbr: 'Ra', hindi: 'राहु' },
+  Ketu: { key: 'ketu', abbr: 'Ke', hindi: 'केतु' },
+};
+
+const SIGN_ABBR = ['Ar', 'Ta', 'Ge', 'Cn', 'Le', 'Vi', 'Li', 'Sc', 'Sg', 'Cp', 'Aq', 'Pi'];
+
+// Fixed North Indian house geometry. House 1 is the top-centre diamond and the
+// houses run anti-clockwise; the sign numbers rotate with the ascendant.
+const NORTH_CELLS = [
+  { points: '200,0 300,100 200,200 100,100', x: 200, signY: 38, planetY: 68, line: 15 },
+  { points: '0,0 200,0 100,100', x: 100, signY: 24, planetY: 46, line: 14 },
+  { points: '0,0 100,100 0,200', x: 40, signY: 96, planetY: 114, line: 14 },
+  { points: '0,200 100,100 200,200 100,300', x: 96, signY: 196, planetY: 216, line: 15 },
+  { points: '0,200 100,300 0,400', x: 40, signY: 318, planetY: 300, line: -14 },
+  { points: '0,400 100,300 200,400', x: 100, signY: 380, planetY: 362, line: -14 },
+  { points: '200,400 100,300 200,200 300,300', x: 200, signY: 252, planetY: 276, line: 15 },
+  { points: '200,400 300,300 400,400', x: 300, signY: 380, planetY: 362, line: -14 },
+  { points: '400,400 300,300 400,200', x: 360, signY: 318, planetY: 300, line: -14 },
+  { points: '400,200 300,100 200,200 300,300', x: 304, signY: 196, planetY: 216, line: 15 },
+  { points: '400,0 400,200 300,100', x: 360, signY: 96, planetY: 114, line: 14 },
+  { points: '400,0 300,100 200,0', x: 300, signY: 24, planetY: 46, line: 14 },
+];
 
 function esc(value) {
   return String(value ?? '')
@@ -79,17 +111,70 @@ function table(headers, rows, options = {}) {
   return `<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
-function houseGrid(varga) {
-  return `<div class="house-grid">${varga.houses
-    .map((h) => `
-      <div class="house-card">
-        <div class="h">House ${h.house}</div>
-        <div class="sign">${esc(h.sign)}</div>
-        <div class="planets">${h.planets.length
-          ? h.planets.map((p) => `<span class="pill">${esc(p)}</span>`).join('')
-          : '<span class="muted small">—</span>'}</div>
-      </div>`)
+function planetName(name) {
+  const meta = PLANET_META[name];
+  return meta
+    ? `<strong>${esc(name)}</strong> <span class="hindi" lang="hi">${esc(meta.hindi)}</span>`
+    : `<strong>${esc(name)}</strong>`;
+}
+
+function planetLegend() {
+  return `<div class="chart-legend">${Object.entries(PLANET_META)
+    .map(([name, meta]) => `<span><strong>${meta.abbr}</strong> ${esc(name)} <span class="hindi" lang="hi">${esc(meta.hindi)}</span></span>`)
     .join('')}</div>`;
+}
+
+function northIndianChart(varga) {
+  const ascIndex = Number.isInteger(varga.ascendant_sign_index)
+    ? varga.ascendant_sign_index
+    : Math.max(0, SIGNS.indexOf(varga.ascendant_sign));
+
+  const cells = NORTH_CELLS.map((cell, index) => {
+    const house = varga.houses?.[index] ?? { house: index + 1, sign: SIGNS[(ascIndex + index) % 12], planets: [] };
+    const signIndex = (ascIndex + index) % 12;
+    const sign = house.sign || SIGNS[signIndex];
+    const signLabel = `${SIGN_ABBR[signIndex]} ${signIndex + 1}`;
+    const lagna = index === 0 ? ' · Lagna' : '';
+    const planets = (house.planets || []).map((name, planetIndex) => {
+      const meta = PLANET_META[name] ?? {
+        key: 'other',
+        abbr: String(name).slice(0, 2),
+        hindi: name,
+      };
+      return `
+        <g class="chart-planet planet-${meta.key}" transform="translate(${cell.x}, ${cell.planetY + planetIndex * cell.line})">
+          <title>${esc(name)} · ${esc(meta.hindi)}${lagna ? ' · Lagna house' : ''}</title>
+          <text text-anchor="middle" dominant-baseline="middle">${esc(meta.abbr)}</text>
+        </g>`;
+    }).join('');
+
+    return `
+      <g class="chart-house-group" data-house="${index + 1}">
+        <title>House ${index + 1} · ${esc(sign)}${lagna}</title>
+        <polygon class="chart-house${index === 0 ? ' lagna-house' : ''}" points="${cell.points}" />
+        <text class="chart-sign" x="${cell.x}" y="${cell.signY}" text-anchor="middle">${esc(signLabel)}</text>
+        ${index === 0 ? `<text class="chart-lagna" x="${cell.x}" y="${cell.signY + 14}" text-anchor="middle">Lagna</text>` : ''}
+        ${planets}
+      </g>`;
+  }).join('');
+
+  return `
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <div>
+          <strong>${esc(varga.varga)} · ${esc(varga.name)}</strong>
+          <span class="muted small"> · North Indian</span>
+        </div>
+        <span class="muted small">Lagna / लग्न: ${esc(varga.ascendant_sign)}</span>
+      </div>
+      <svg class="north-chart" viewBox="-8 -8 416 416" role="img" aria-label="North Indian chart for ${esc(varga.varga)} ${esc(varga.name)}">
+        <rect class="chart-frame" x="0" y="0" width="400" height="400" rx="3" />
+        ${cells}
+        <path class="chart-grid" d="M0 0 L400 400 M400 0 L0 400 M200 0 L400 200 L200 400 L0 200 Z" />
+      </svg>
+      ${planetLegend()}
+      <p class="chart-note muted small">Hover a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
+    </div>`;
 }
 
 function renderChart({ chart, markdown }) {
@@ -108,9 +193,9 @@ function renderChart({ chart, markdown }) {
   ];
 
   const planets = table(
-    ['Planet', 'Sign', 'Degree', 'Nakshatra', 'Pada', 'House', 'Dignity', 'R', 'Combust'],
+    ['Planet / ग्रह', 'Sign', 'Degree', 'Nakshatra', 'Pada', 'House', 'Dignity', 'R', 'Combust'],
     c.planets.map((p) => [
-      `<strong>${esc(p.id)}</strong>`,
+      planetName(p.id),
       esc(p.sign),
       num(p.degree_in_sign),
       esc(p.nakshatra),
@@ -128,7 +213,7 @@ function renderChart({ chart, markdown }) {
     c.houses.map((h) => [
       h.house,
       esc(h.sign),
-      esc(h.lord),
+      planetName(h.lord),
       h.lord_house ?? '—',
       h.occupants.length ? h.occupants.map(esc).join(', ') : '—',
       c.bhava_chalit[h.house - 1].planets.length ? c.bhava_chalit[h.house - 1].planets.map(esc).join(', ') : '—',
@@ -146,16 +231,16 @@ function renderChart({ chart, markdown }) {
     : '<p class="muted">No same-sign conjunctions.</p>';
 
   const vargas = Object.entries(c.vargas)
+    .filter(([key]) => key !== 'D1')
     .map(([key, v]) => `
       <div class="section">
         <h3>${key} — ${esc(v.name)}</h3>
-        <p class="muted small">Lagna: <strong>${esc(v.ascendant_sign)}</strong></p>
-        ${houseGrid(v)}
+        ${northIndianChart(v)}
       </div>`)
     .join('');
 
   const dashaRows = c.dasha.mahadashas.map((m) => [
-    `<strong>${esc(m.lord)}</strong>`,
+    planetName(m.lord),
     m.years,
     esc(m.start),
     esc(m.end),
@@ -165,10 +250,10 @@ function renderChart({ chart, markdown }) {
   const dashaDetails = c.dasha.mahadashas
     .map((m) => `
       <details>
-        <summary>${esc(m.lord)} — ${esc(m.start)} → ${esc(m.end)}</summary>
+        <summary>${esc(m.lord)} <span class="hindi" lang="hi">${esc(PLANET_META[m.lord]?.hindi ?? '')}</span> — ${esc(m.start)} → ${esc(m.end)}</summary>
         ${table(
           ['Antardasha', 'Years', 'Start', 'End'],
-          m.antardashas.map((a) => [esc(a.lord), a.years, esc(a.start), esc(a.end)]),
+          m.antardashas.map((a) => [planetName(a.lord), a.years, esc(a.start), esc(a.end)]),
           { numColumns: [1] },
         )}
       </details>`)
@@ -205,8 +290,8 @@ function renderChart({ chart, markdown }) {
 
     <div class="section">
       <h3>Houses (whole sign)</h3>
-      ${houseGrid(c.vargas.D1 || { houses: [] })}
-      <div style="height:12px"></div>
+      ${northIndianChart(c.vargas.D1 || { varga: 'D1', name: 'Rashi', ascendant_sign: c.summary.ascendant.sign, ascendant_sign_index: c.summary.ascendant.sign_index, houses: [] })}
+      <div style="height:14px"></div>
       ${houses}
       <p class="muted small">Whole-sign (rashi) houses are primary. The Sripati column is the bhava-chalit placement; the last column is the Sripati bhava madhya.</p>
     </div>
@@ -241,8 +326,8 @@ function renderChart({ chart, markdown }) {
 
     <div class="section">
       <h3>Vimshottari Dasha</h3>
-      <p class="muted small">Balance at birth: <strong>${esc(c.dasha.balance_at_birth.lord)}</strong> ${num(c.dasha.balance_at_birth.years, 2)} years (Moon in ${esc(c.dasha.birth_nakshatra)}).</p>
-      ${c.dasha.current ? `<p class="small">Current: <strong>${esc(c.dasha.current.mahadasha.lord)}</strong>${c.dasha.current.antardasha ? ` / ${esc(c.dasha.current.antardasha.lord)}` : ''} <span class="muted">(as of ${esc(c.dasha.current.as_of)})</span></p>` : ''}
+      <p class="muted small">Balance at birth: ${planetName(c.dasha.balance_at_birth.lord)} ${num(c.dasha.balance_at_birth.years, 2)} years (Moon in ${esc(c.dasha.birth_nakshatra)}).</p>
+      ${c.dasha.current ? `<p class="small">Current: ${planetName(c.dasha.current.mahadasha.lord)}${c.dasha.current.antardasha ? ` / ${planetName(c.dasha.current.antardasha.lord)}` : ''} <span class="muted">(as of ${esc(c.dasha.current.as_of)})</span></p>` : ''}
       ${table(['Mahadasha', 'Years', 'Start', 'End', ''], dashaRows, { numColumns: [1] })}
       <h4>Antardashas</h4>
       ${dashaDetails}

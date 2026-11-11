@@ -182,28 +182,106 @@ th { background: #faf8f4; font-weight: 600; color: var(--muted); font-size: 12px
 tr:last-child td { border-bottom: 0; }
 td.num { font-variant-numeric: tabular-nums; }
 
-.house-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+.hindi {
+  font-family: "Noto Sans Devanagari", "Nirmala UI", "Segoe UI", sans-serif;
+  color: var(--muted);
+  font-size: 0.92em;
 }
-.house-card {
+
+.chart-card {
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  padding: 12px 13px;
-  min-height: 92px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf9, #fff);
+  padding: 16px 18px 12px;
+  margin-bottom: 16px;
 }
-.house-card .h { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.house-card .sign { font-weight: 600; margin: 2px 0 6px; }
-.house-card .planets { display: flex; flex-wrap: wrap; gap: 4px; }
-.pill {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 12px;
+.chart-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
+.north-chart {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+.chart-frame {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+.chart-grid {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.chart-house {
+  fill: #fffdf9;
+  stroke: none;
+  transition: fill 0.15s ease;
+}
+.chart-house.lagna-house { fill: #fbf2e9; }
+.chart-house-group:hover .chart-house { fill: var(--accent-soft); }
+.chart-sign {
+  font-size: 11px;
+  fill: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.chart-lagna {
+  font-size: 9px;
+  fill: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.chart-planet text {
+  font-size: 15px;
+  font-weight: 800;
+  fill: var(--ink);
+  paint-order: stroke fill;
+  stroke: #fffdf9;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.chart-planet:hover text { fill: var(--accent); }
+.planet-sun text { fill: #a86b00; }
+.planet-moon text { fill: #526577; }
+.planet-mars text { fill: #a33a2a; }
+.planet-mercury text { fill: #2f6b4f; }
+.planet-jupiter text { fill: #8a6a00; }
+.planet-venus text { fill: #8a4b2a; }
+.planet-saturn text { fill: #3d4f6b; }
+.planet-rahu text { fill: #5b4a6b; }
+.planet-ketu text { fill: #6b5a3d; }
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.chart-legend span {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.chart-legend strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.chart-note { text-align: center; margin: 8px 0 0; }
 
 .score {
   display: flex;
@@ -256,12 +334,11 @@ fieldset.person .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
 ul.plain { margin: 0; padding-left: 18px; }
 ul.plain li { margin-bottom: 6px; }
 
-@media (max-width: 760px) {
-  .house-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
 @media (max-width: 640px) {
   .topbar { padding: 16px; flex-direction: column; gap: 12px; align-items: flex-start; }
   main { padding: 18px 12px 60px; }
   .card { padding: 16px; }
+  .chart-card { padding: 12px 12px 10px; }
+  .chart-legend { gap: 3px 10px; }
+  .chart-legend span { font-size: 11px; }
 }
