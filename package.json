@@ -1,0 +1,17 @@
+{
+  "name": "kundali",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vedic birth-chart data generator (D1/D9/D10, dasha, panchang, matching) for AI-assisted interpretation",
+  "main": "src/chart.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "cli": "node src/cli.js",
+    "validate": "node scripts/validate-ascendant.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "sweph-wasm": "^2.6.9"
+  }
+}

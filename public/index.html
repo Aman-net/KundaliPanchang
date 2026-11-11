@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kundali — Vedic chart data generator</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%238a4b2a'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Kundali</h1>
+      <p>Vedic chart data for interpretation</p>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="chart">Chart</button>
+      <button class="tab" data-tab="match">Match</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="panel-chart" class="panel">
+      <form id="chart-form" class="card form-card">
+        <div class="form-grid">
+          <label>Name <input name="name" type="text" placeholder="Optional" /></label>
+          <label>Date <input name="date" type="date" value="2000-08-15" required /></label>
+          <label>Time <input name="time" type="time" step="1" value="10:30" required /></label>
+          <label>Timezone <input name="timeZone" type="text" value="Asia/Kolkata" required /></label>
+          <label>Place <input name="placeName" type="text" value="Banda, UP" /></label>
+          <label>Latitude <input name="latitude" type="number" step="any" value="25.483" required /></label>
+          <label>Longitude <input name="longitude" type="number" step="any" value="80.334" required /></label>
+          <label>Elevation (m) <input name="elevation" type="number" step="any" value="124" /></label>
+        </div>
+
+        <div class="form-row">
+          <span class="form-label">Divisional charts</span>
+          <div class="chips" id="varga-chips">
+            <label class="chip"><input type="checkbox" value="D1" checked disabled /> D1</label>
+            <label class="chip"><input type="checkbox" value="D9" checked /> D9</label>
+            <label class="chip"><input type="checkbox" value="D10" checked /> D10</label>
+            <label class="chip"><input type="checkbox" value="D2" /> D2</label>
+            <label class="chip"><input type="checkbox" value="D3" /> D3</label>
+            <label class="chip"><input type="checkbox" value="D4" /> D4</label>
+            <label class="chip"><input type="checkbox" value="D7" /> D7</label>
+            <label class="chip"><input type="checkbox" value="D12" /> D12</label>
+            <label class="chip"><input type="checkbox" value="D16" /> D16</label>
+            <label class="chip"><input type="checkbox" value="D20" /> D20</label>
+            <label class="chip"><input type="checkbox" value="D24" /> D24</label>
+            <label class="chip"><input type="checkbox" value="D27" /> D27</label>
+            <label class="chip"><input type="checkbox" value="D30" /> D30</label>
+            <label class="chip"><input type="checkbox" value="D40" /> D40</label>
+            <label class="chip"><input type="checkbox" value="D45" /> D45</label>
+            <label class="chip"><input type="checkbox" value="D60" /> D60</label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="inline">Dasha depth
+            <select name="dashaDepth">
+              <option value="2" selected>Maha + Antar</option>
+              <option value="3">Add Pratyantar</option>
+            </select>
+          </label>
+          <button type="submit" class="primary">Generate chart</button>
+        </div>
+        <p class="hint">Times are local wall-clock in the given IANA timezone. Default location is Banda, Uttar Pradesh.</p>
+      </form>
+
+      <div id="chart-error" class="error hidden"></div>
+      <div id="chart-result" class="hidden"></div>
+    </section>
+
+    <section id="panel-match" class="panel hidden">
+      <form id="match-form" class="card form-card">
+        <div class="match-grid">
+          <fieldset class="person" data-person="a">
+            <legend>Person A</legend>
+            <label>Name <input name="name" type="text" placeholder="Optional" /></label>
+            <label>Date <input name="date" type="date" value="2000-08-15" required /></label>
+            <label>Time <input name="time" type="time" step="1" value="10:30" required /></label>
+            <label>Timezone <input name="timeZone" type="text" value="Asia/Kolkata" /></label>
+            <label>Place <input name="placeName" type="text" value="Banda, UP" /></label>
+            <div class="two">
+              <label>Latitude <input name="latitude" type="number" step="any" value="25.483" /></label>
+              <label>Longitude <input name="longitude" type="number" step="any" value="80.334" /></label>
+            </div>
+            <label>Elevation (m) <input name="elevation" type="number" step="any" value="124" /></label>
+          </fieldset>
+
+          <fieldset class="person" data-person="b">
+            <legend>Person B</legend>
+            <label>Name <input name="name" type="text" placeholder="Optional" /></label>
+            <label>Date <input name="date" type="date" value="2002-03-08" required /></label>
+            <label>Time <input name="time" type="time" step="1" value="14:20" required /></label>
+            <label>Timezone <input name="timeZone" type="text" value="Asia/Kolkata" /></label>
+            <label>Place <input name="placeName" type="text" value="Banda, UP" /></label>
+            <div class="two">
+              <label>Latitude <input name="latitude" type="number" step="any" value="25.483" /></label>
+              <label>Longitude <input name="longitude" type="number" step="any" value="80.334" /></label>
+            </div>
+            <label>Elevation (m) <input name="elevation" type="number" step="any" value="124" /></label>
+          </fieldset>
+        </div>
+
+        <div class="form-row">
+          <label class="inline">Groom
+            <select name="groom">
+              <option value="A" selected>Person A</option>
+              <option value="B">Person B</option>
+            </select>
+          </label>
+          <button type="submit" class="primary">Match charts</button>
+        </div>
+      </form>
+
+      <div id="match-error" class="error hidden"></div>
+      <div id="match-result" class="hidden"></div>
+    </section>
+  </main>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
