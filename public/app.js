@@ -130,6 +130,21 @@ function num(value, digits = 2) {
   return Number(value).toFixed(digits);
 }
 
+function safeFileName(value) {
+  const cleaned = String(value || '')
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return cleaned.slice(0, 80);
+}
+
+function downloadBase(name) {
+  const safe = safeFileName(name);
+  return safe ? `${safe}_Kundali` : 'Kundali';
+}
+
 function download(filename, text, type) {
   const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
@@ -139,7 +154,7 @@ function download(filename, text, type) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /* ---------------- tabs ---------------- */
@@ -151,6 +166,170 @@ $$('.tab').forEach((tab) => {
     $(`#panel-${tab.dataset.tab}`).classList.remove('hidden');
   });
 });
+
+/* ---------------- place search ---------------- */
+
+function initPlaceSearch() {
+  $$('[data-location]').forEach((root) => {
+    const input = root.querySelector('[data-place-search]');
+    if (!input) return;
+
+    const list = document.createElement('div');
+    list.className = 'place-search-results';
+    list.setAttribute('role', 'listbox');
+    list.setAttribute('aria-hidden', 'true');
+    if (input.id) {
+      list.id = `${input.id}-results`;
+      input.setAttribute('aria-controls', list.id);
+    }
+    input.insertAdjacentElement('afterend', list);
+
+    let results = [];
+    let open = false;
+    let activeIndex = -1;
+    let controller = null;
+    let debounceTimer = null;
+
+    const setAria = () => {
+      input.setAttribute('aria-expanded', String(open));
+      input.setAttribute('aria-activedescendant', activeIndex >= 0 ? `${input.id}-option-${activeIndex}` : '');
+    };
+
+    const hide = () => {
+      open = false;
+      activeIndex = -1;
+      list.classList.remove('open');
+      list.setAttribute('aria-hidden', 'true');
+      list.innerHTML = '';
+      setAria();
+    };
+
+    const show = () => {
+      open = true;
+      list.classList.add('open');
+      list.setAttribute('aria-hidden', 'false');
+      setAria();
+    };
+
+    const fill = (place) => {
+      const set = (name, value) => {
+        const field = root.querySelector(`[name="${name}"]`);
+        if (field && value !== undefined && value !== null) field.value = value;
+      };
+      const region = place.admin1 || place.admin2 || '';
+      const country = place.country || '';
+      const label = [place.name, region, country].filter(Boolean).join(', ');
+      set('placeName', label);
+      set('latitude', place.latitude);
+      set('longitude', place.longitude);
+      set('elevation', place.elevation ?? '');
+      set('timeZone', place.timezone);
+      input.value = '';
+      hide();
+      input.blur();
+    };
+
+    const render = () => {
+      if (!results.length) {
+        list.innerHTML = '<div class="place-search-empty">No matching place</div>';
+        activeIndex = -1;
+        setAria();
+        return;
+      }
+      list.innerHTML = results.map((place, index) => {
+        const region = place.admin1 || place.admin2 || '';
+        const country = place.country || '';
+        const meta = [region, country].filter(Boolean).join(', ');
+        return `
+          <button type="button" class="place-search-option" role="option" id="${input.id}-option-${index}" aria-selected="false" data-index="${index}">
+            <strong>${esc(place.name)}</strong>
+            <span>${esc(meta)}</span>
+          </button>`;
+      }).join('');
+      setAria();
+    };
+
+    const setActive = (index) => {
+      if (!results.length) return;
+      activeIndex = (index + results.length) % results.length;
+      [...list.querySelectorAll('.place-search-option')].forEach((button, i) => {
+        button.classList.toggle('active', i === activeIndex);
+        button.setAttribute('aria-selected', String(i === activeIndex));
+      });
+      const activeButton = list.querySelector('.place-search-option.active');
+      if (activeButton) activeButton.scrollIntoView({ block: 'nearest' });
+      setAria();
+    };
+
+    const search = async (query) => {
+      if (query.length < 2) {
+        controller?.abort();
+        hide();
+        return;
+      }
+      controller?.abort();
+      controller = new AbortController();
+      list.innerHTML = '<div class="place-search-loading">Searching…</div>';
+      show();
+      try {
+        const response = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`,
+          { signal: controller.signal },
+        );
+        if (!response.ok) throw new Error('Place search failed');
+        const data = await response.json();
+        results = data.results ?? [];
+        activeIndex = -1;
+        render();
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        results = [];
+        list.innerHTML = '<div class="place-search-error">Search failed</div>';
+      }
+    };
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => search(input.value.trim()), 250);
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (!open) {
+        if (event.key === 'ArrowDown' && results.length) {
+          event.preventDefault();
+          show();
+          setActive(0);
+        }
+        return;
+      }
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        setActive(activeIndex + 1);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        setActive(activeIndex - 1);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        if (activeIndex >= 0) fill(results[activeIndex]);
+        else hide();
+      } else if (event.key === 'Escape') {
+        hide();
+      }
+    });
+
+    list.addEventListener('click', (event) => {
+      const option = event.target.closest('.place-search-option');
+      if (!option) return;
+      fill(results[Number(option.dataset.index)]);
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!root.contains(event.target)) hide();
+    });
+  });
+}
+
+initPlaceSearch();
 
 /* ---------------- chart ---------------- */
 
@@ -366,7 +545,8 @@ function hideResult(selector) {
 }
 
 function renderChart({ chart, markdown }) {
-  state.chart = { chart, markdown };
+  const fileNameBase = downloadBase(chart.subject?.name || null);
+  state.chart = { chart, markdown, fileNameBase };
   const el = $('#chart-result');
   const c = chart;
   const s = c.summary;
@@ -531,8 +711,8 @@ function renderChart({ chart, markdown }) {
   `;
 
   el.classList.remove('hidden');
-  $('#dl-json').addEventListener('click', () => download('chart.json', JSON.stringify(c, null, 2), 'application/json'));
-  $('#dl-md').addEventListener('click', () => download('chart.md', markdown, 'text/markdown'));
+  $('#dl-json').addEventListener('click', () => download(`${state.chart.fileNameBase}.json`, JSON.stringify(c, null, 2), 'application/json'));
+  $('#dl-md').addEventListener('click', () => download(`${state.chart.fileNameBase}.md`, markdown, 'text/markdown'));
 }
 
 $('#chart-form').addEventListener('submit', async (event) => {

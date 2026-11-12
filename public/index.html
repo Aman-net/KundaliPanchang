@@ -21,7 +21,11 @@
 
   <main>
     <section id="panel-chart" class="panel">
-      <form id="chart-form" class="card form-card">
+      <form id="chart-form" class="card form-card" data-location>
+        <div class="location-search">
+          <label for="place-search-chart">Search place</label>
+          <input id="place-search-chart" type="search" data-place-search autocomplete="off" placeholder="Town or city" />
+        </div>
         <div class="form-grid">
           <label>Name <input name="name" type="text" placeholder="Optional" /></label>
           <label>Date <input name="date" type="date" value="2000-08-15" required /></label>
@@ -75,8 +79,12 @@
     <section id="panel-match" class="panel hidden">
       <form id="match-form" class="card form-card">
         <div class="match-grid">
-          <fieldset class="person" data-person="a">
+          <fieldset class="person" data-person="a" data-location>
             <legend>Person A</legend>
+            <div class="location-search">
+              <label for="place-search-a">Search place</label>
+              <input id="place-search-a" type="search" data-place-search autocomplete="off" placeholder="Town or city" />
+            </div>
             <label>Name <input name="name" type="text" placeholder="Optional" /></label>
             <label>Date <input name="date" type="date" value="2000-08-15" required /></label>
             <label>Time <input name="time" type="time" step="1" value="10:30" required /></label>
@@ -89,8 +97,12 @@
             <label>Elevation (m) <input name="elevation" type="number" step="any" value="124" /></label>
           </fieldset>
 
-          <fieldset class="person" data-person="b">
+          <fieldset class="person" data-person="b" data-location>
             <legend>Person B</legend>
+            <div class="location-search">
+              <label for="place-search-b">Search place</label>
+              <input id="place-search-b" type="search" data-place-search autocomplete="off" placeholder="Town or city" />
+            </div>
             <label>Name <input name="name" type="text" placeholder="Optional" /></label>
             <label>Date <input name="date" type="date" value="2002-03-08" required /></label>
             <label>Time <input name="time" type="time" step="1" value="14:20" required /></label>

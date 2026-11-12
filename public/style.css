@@ -71,6 +71,50 @@ main { max-width: 1180px; margin: 0 auto; padding: 26px 20px 80px; }
   gap: 14px;
 }
 
+.location-search {
+  position: relative;
+  margin-bottom: 14px;
+}
+.place-search-results {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(31, 29, 26, 0.12);
+  padding: 4px;
+}
+.place-search-results.open { display: block; }
+.place-search-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.place-search-option:hover,
+.place-search-option.active { background: var(--accent-soft); }
+.place-search-option span { color: var(--muted); font-size: 12px; }
+.place-search-empty,
+.place-search-loading,
+.place-search-error {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.place-search-error { color: var(--bad); }
+
 label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--muted); }
 input, select {
   font: inherit;
