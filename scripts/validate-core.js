@@ -328,6 +328,9 @@ await test('Vimshottari balance, sequence, and period totals', () => {
   }
   assert.equal(dasha.current.mahadasha.lord, 'Jupiter');
   assert.equal(dasha.current.antardasha.lord, 'Saturn');
+  near(dasha.current.as_of_jd, asOf, 1e-6, 'current dasha as-of JD');
+  const currentMaha = dasha.mahadashas.find((m) => m.lord === dasha.current.mahadasha.lord);
+  assert.ok(currentMaha.start_jd <= dasha.current.as_of_jd && dasha.current.as_of_jd < currentMaha.end_jd, 'current dasha JD in range');
   assert.equal(VIMSHOTTARI_ORDER.length, 9);
 });
 

@@ -157,6 +157,71 @@ function download(filename, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+const DASHA_COLORS = {
+  sun: '#a86b00',
+  moon: '#526577',
+  mars: '#a33a2a',
+  mercury: '#2f6b4f',
+  jupiter: '#8a6a00',
+  venus: '#8a4b2a',
+  saturn: '#3d4f6b',
+  rahu: '#5b4a6b',
+  ketu: '#6b5a3d',
+};
+
+function dashaTimeline(dasha, birthJd) {
+  const totalYears = 120;
+  const yearDays = dasha.year_days || 365.25;
+  const asOfJd = dasha.current?.as_of_jd ?? null;
+  const toPercent = (jd) => ((jd - birthJd) / yearDays / totalYears) * 100;
+  const clamp = (value) => Math.max(0, Math.min(100, value));
+
+  const segments = dasha.mahadashas.map((maha) => {
+    const startAge = Math.max(0, (maha.start_jd - birthJd) / yearDays);
+    const endAge = Math.min(totalYears, (maha.end_jd - birthJd) / yearDays);
+    const left = (startAge / totalYears) * 100;
+    const width = Math.max(0.1, ((endAge - startAge) / totalYears) * 100);
+    const meta = PLANET_META[maha.lord];
+    const title = `${maha.lord} / ${meta.hindi} · ${num(maha.years, 1)}y · ${maha.start} → ${maha.end}`;
+    return `
+      <div class="dasha-segment planet-${meta.key}" style="left:${left.toFixed(3)}%;width:${width.toFixed(3)}%;background:${DASHA_COLORS[meta.key]}" title="${esc(title)}">
+        <span>${esc(meta.abbr)}</span>
+      </div>`;
+  }).join('');
+
+  const marker = asOfJd === null ? '' : (() => {
+    const percent = clamp(toPercent(asOfJd));
+    const current = dasha.current;
+    const label = current.antardasha
+      ? `${current.mahadasha.lord} / ${PLANET_META[current.mahadasha.lord].hindi} · ${current.antardasha.lord} / ${PLANET_META[current.antardasha.lord].hindi}`
+      : `${current.mahadasha.lord} / ${PLANET_META[current.mahadasha.lord].hindi}`;
+    return `
+      <div class="dasha-current" style="left:${percent.toFixed(3)}%" title="${esc(label)}">
+        <span class="dasha-current-label">Now / अभी</span>
+      </div>`;
+  })();
+
+  const axis = [0, 20, 40, 60, 80, 100, 120]
+    .map((age) => `<span style="left:${(age / totalYears) * 100}%">${age}y</span>`)
+    .join('');
+
+  const legend = dasha.mahadashas.map((maha) => {
+    const meta = PLANET_META[maha.lord];
+    return `
+      <span>
+        <i style="background:${DASHA_COLORS[meta.key]}"></i>
+        ${meta.abbr} ${esc(maha.lord)} <span class="hindi">${esc(meta.hindi)}</span> · ${num(maha.years, 1)}y
+      </span>`;
+  }).join('');
+
+  return `
+    <div class="dasha-timeline">
+      <div class="dasha-track">${segments}${marker}</div>
+      <div class="dasha-axis">${axis}</div>
+      <div class="dasha-legend">${legend}</div>
+    </div>`;
+}
+
 /* ---------------- tabs ---------------- */
 
 $$('.tab').forEach((tab) => {
@@ -330,6 +395,12 @@ function initPlaceSearch() {
 }
 
 initPlaceSearch();
+
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('#chart-result details, #match-result details').forEach((node) => {
+    node.open = true;
+  });
+});
 
 /* ---------------- chart ---------------- */
 
@@ -637,6 +708,7 @@ function renderChart({ chart, markdown }) {
         ${esc(c.subject.place.name || '—')} · ${num(c.subject.place.latitude, 4)}, ${num(c.subject.place.longitude, 4)} · ${c.subject.place.elevation_m} m</div>
       </div>
       <div class="actions">
+        <button class="ghost" id="print-chart">Print / PDF</button>
         <button class="ghost" id="dl-json">Download JSON</button>
         <button class="ghost" id="dl-md">Download Markdown</button>
       </div>
@@ -696,12 +768,13 @@ function renderChart({ chart, markdown }) {
       <h3>Vimshottari Dasha <span class="hindi" lang="hi">विंशोत्तरी दशा</span></h3>
       <p class="muted small">Balance at birth: ${planetName(c.dasha.balance_at_birth.lord)} ${num(c.dasha.balance_at_birth.years, 2)} years (Moon in ${nakshatraName(c.dasha.birth_nakshatra)}).</p>
       ${c.dasha.current ? `<p class="small">Current: ${planetName(c.dasha.current.mahadasha.lord)}${c.dasha.current.antardasha ? ` / ${planetName(c.dasha.current.antardasha.lord)}` : ''} <span class="muted">(as of ${esc(c.dasha.current.as_of)})</span></p>` : ''}
+      ${dashaTimeline(c.dasha, c.subject.birth.julian_day_ut)}
       ${table(['Mahadasha', 'Years', 'Start', 'End', ''], dashaRows, { numColumns: [1] })}
       <h4>Antardashas</h4>
       ${dashaDetails}
     </div>
 
-    <div class="section">
+    <div class="section print-hide">
       <h3>Machine-readable data</h3>
       <details>
         <summary>Show chart JSON</summary>
@@ -711,6 +784,10 @@ function renderChart({ chart, markdown }) {
   `;
 
   el.classList.remove('hidden');
+  $('#print-chart').addEventListener('click', () => {
+    document.querySelectorAll('#chart-result details').forEach((node) => { node.open = true; });
+    window.print();
+  });
   $('#dl-json').addEventListener('click', () => download(`${state.chart.fileNameBase}.json`, JSON.stringify(c, null, 2), 'application/json'));
   $('#dl-md').addEventListener('click', () => download(`${state.chart.fileNameBase}.md`, markdown, 'text/markdown'));
 }
@@ -906,6 +983,7 @@ function renderMatch({ match, markdown }) {
         <div class="sub">Ashtakoota plus Mangal dosha. Raw koota values are included in the JSON for independent checking.</div>
       </div>
       <div class="actions">
+        <button class="ghost" id="print-match">Print / PDF</button>
         <button class="ghost" id="match-dl-json">Download JSON</button>
         <button class="ghost" id="match-dl-md">Download Markdown</button>
       </div>
@@ -947,7 +1025,7 @@ function renderMatch({ match, markdown }) {
       </div>
     </div>
 
-    <div class="section">
+    <div class="section print-hide">
       <h3>Machine-readable data</h3>
       <details>
         <summary>Show match JSON</summary>
@@ -957,6 +1035,10 @@ function renderMatch({ match, markdown }) {
   `;
 
   el.classList.remove('hidden');
+  $('#print-match').addEventListener('click', () => {
+    document.querySelectorAll('#match-result details').forEach((node) => { node.open = true; });
+    window.print();
+  });
   $('#match-dl-json').addEventListener('click', () => download('match.json', JSON.stringify(match, null, 2), 'application/json'));
   $('#match-dl-md').addEventListener('click', () => download('match.md', markdown, 'text/markdown'));
 }

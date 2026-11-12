@@ -369,6 +369,7 @@ function currentDasha(mahadashas, asOfJd, depth, fmt) {
   const antar = maha.antardashas.find((a) => a.start_jd <= asOfJd && asOfJd < a.end_jd);
   const current = {
     as_of: fmt(asOfJd),
+    as_of_jd: Number(asOfJd.toFixed(6)),
     mahadasha: { lord: maha.lord, start: maha.start, end: maha.end },
     antardasha: antar ? { lord: antar.lord, start: antar.start, end: antar.end } : null,
   };

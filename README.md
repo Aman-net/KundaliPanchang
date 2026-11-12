@@ -10,9 +10,11 @@ A Vedic birth-chart **data generator**. It computes the chart and the determinis
 - **Houses:** whole-sign (rashi) primary, plus Sripati bhava madhya, boundaries and bhava-chalit placements.
 - **Reference charts:** Moon chart (Chandra lagna) and Sun chart (Surya lagna).
 - **Relations:** graha drishti aspects (including Mars/Jupiter/Saturn special aspects), same-sign conjunctions.
-- **Timing:** Vimshottari dasha — mahadasha, antardasha, optional pratyantardasha, plus the current period at generation time.
+- **Timing:** Vimshottari dasha — mahadasha, antardasha, optional pratyantardasha, plus the current period at generation time. The UI includes a 120-year mahadasha timeline with the current period marker.
 - **Birth panchang:** vara, tithi, nakshatra, yoga, karana, sunrise/sunset, moonrise/moonset.
 - **Matching:** Ashtakoota (8 kootas, 36 points) and Mangal dosha for two charts.
+- **Place search:** Open-Meteo town/city lookup fills place, latitude, longitude, elevation and timezone.
+- **Print / PDF:** browser print-to-PDF button on the chart and match results.
 
 ## Conventions
 
