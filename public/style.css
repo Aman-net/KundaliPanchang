@@ -291,6 +291,10 @@ td.num { font-variant-numeric: tabular-nums; }
 }
 .chart-house.lagna-house { fill: #fbf2e9; }
 .chart-house-group:hover .chart-house { fill: var(--accent-soft); }
+.chart-house-group { cursor: pointer; }
+.chart-house-group.selected .chart-house { fill: var(--accent-soft); }
+.chart-house-group.selected .chart-sign,
+.chart-house-group.selected .chart-lagna { fill: var(--accent); }
 .chart-sign {
   font-size: 11px;
   fill: var(--muted);
@@ -314,6 +318,22 @@ td.num { font-variant-numeric: tabular-nums; }
   stroke-linejoin: round;
 }
 .chart-planet:hover text { fill: var(--accent); }
+.chart-planet { cursor: pointer; }
+.chart-planet.selected text { fill: var(--accent); }
+.chart-inspect {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--ink);
+}
+.chart-inspect strong { font-size: 14px; }
+.chart-inspect .muted { font-size: 12px; }
+.north-chart { user-select: none; touch-action: manipulation; }
 .planet-sun text { fill: #a86b00; }
 .planet-moon text { fill: #526577; }
 .planet-mars text { fill: #a33a2a; }

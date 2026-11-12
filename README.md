@@ -5,7 +5,7 @@ A Vedic birth-chart **data generator**. It computes the chart and the determinis
 ## What it computes
 
 - **Charts:** D1 (Rashi), D9 (Navamsa), D10 (Dashamsha) by default; D2–D60 selectable.
-- **North Indian diagrams:** D1/D9/D10 rendered as interactive North Indian charts with English + Hindi planet labels. South Indian layout is not implemented yet.
+- **North Indian diagrams:** D1/D9/D10 rendered as interactive North Indian charts with English + Hindi planet labels; tap or click a house or planet for details. South Indian layout is not implemented yet.
 - **Planets:** sidereal longitude, sign, degree, nakshatra + pada, house, dignity, retrogression, combustion.
 - **Houses:** whole-sign (rashi) primary, plus Sripati bhava madhya, boundaries and bhava-chalit placements.
 - **Reference charts:** Moon chart (Chandra lagna) and Sun chart (Surya lagna).

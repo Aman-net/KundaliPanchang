@@ -513,14 +513,14 @@ function northChartSvg(varga) {
         hindi: name,
       };
       return `
-        <g class="chart-planet planet-${meta.key}" transform="translate(${cell.x}, ${cell.planetY + planetIndex * cell.line})">
+        <g class="chart-planet planet-${meta.key}" data-planet="${esc(name)}" data-house="${index + 1}" transform="translate(${cell.x}, ${cell.planetY + planetIndex * cell.line})">
           <title>${esc(name)} · ${esc(meta.hindi)}${lagna ? ' · Lagna house' : ''}</title>
           <text text-anchor="middle" dominant-baseline="middle">${esc(meta.abbr)}</text>
         </g>`;
     }).join('');
 
     return `
-      <g class="chart-house-group" data-house="${index + 1}">
+      <g class="chart-house-group" data-house="${index + 1}" data-sign="${esc(sign)}" data-sign-hindi="${esc(SIGN_HINDI[sign] ?? '')}" data-planets="${esc((house.planets || []).join(','))}">
         <title>House ${index + 1} · ${esc(sign)} / ${esc(SIGN_HINDI[sign] ?? '')}${lagna}</title>
         <polygon class="chart-house${index === 0 ? ' lagna-house' : ''}" points="${cell.points}" />
         <text class="chart-sign" x="${cell.x}" y="${cell.signY}" text-anchor="middle">${esc(signLabel)}</text>
@@ -534,7 +534,8 @@ function northChartSvg(varga) {
       <rect class="chart-frame" x="0" y="0" width="400" height="400" rx="3" />
       ${cells}
       <path class="chart-grid" d="M0 0 L400 400 M400 0 L0 400 M200 0 L400 200 L200 400 L0 200 Z" />
-    </svg>`;
+    </svg>
+    <div class="chart-inspect" hidden></div>`;
 }
 
 function northIndianChart(varga) {
@@ -549,9 +550,46 @@ function northIndianChart(varga) {
       </div>
       ${northChartSvg(varga)}
       ${planetLegend()}
-      <p class="chart-note muted small">Hover a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
+      <p class="chart-note muted small">Tap or click a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
     </div>`;
 }
+
+document.addEventListener('click', (event) => {
+  const target = event.target.closest('.chart-house-group, .chart-planet');
+  if (!target) return;
+  const svg = target.closest('.north-chart');
+  const panel = svg?.nextElementSibling;
+  if (!svg || !panel || !panel.classList.contains('chart-inspect')) return;
+
+  const houseGroup = target.closest('.chart-house-group');
+  const houseNumber = houseGroup?.dataset.house ?? target.dataset.house;
+  const sign = houseGroup?.dataset.sign ?? '';
+  const signHindi = houseGroup?.dataset.signHindi ?? '';
+  const planets = (houseGroup?.dataset.planets || '').split(',').filter(Boolean);
+  const planetName = target.dataset.planet;
+  const planetMeta = PLANET_META[planetName];
+  const lagna = Number(houseNumber) === 1 ? ' · Lagna / लग्न' : '';
+
+  let html = '';
+  if (planetName && planetMeta) {
+    html = `
+      <div><strong>${esc(planetName)} <span class="hindi">${esc(planetMeta.hindi)}</span></strong> · House ${esc(houseNumber)} · ${esc(sign)} <span class="hindi">${esc(signHindi)}</span>${lagna}</div>`;
+  } else if (houseNumber) {
+    html = `
+      <div><strong>House ${esc(houseNumber)}</strong> · ${esc(sign)} <span class="hindi">${esc(signHindi)}</span>${lagna}</div>`;
+    if (planets.length) {
+      html += `<div class="muted small">Planets: ${planets.map((name) => {
+        const meta = PLANET_META[name];
+        return `${esc(name)} <span class="hindi">${esc(meta?.hindi ?? '')}</span>`;
+      }).join(', ')}</div>`;
+    }
+  }
+
+  panel.innerHTML = html;
+  panel.hidden = false;
+  svg.querySelectorAll('.selected').forEach((node) => node.classList.remove('selected'));
+  target.classList.add('selected');
+});
 
 function skeletonLines(count) {
   return Array.from({ length: count }, () => '<div class="skeleton-line"></div>').join('');
@@ -972,7 +1010,7 @@ function renderMatch({ match, markdown }) {
           </div>
         </div>
         ${planetLegend()}
-        <p class="chart-note muted small">Hover a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
+        <p class="chart-note muted small">Tap or click a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
       </div>`
     : '';
 
