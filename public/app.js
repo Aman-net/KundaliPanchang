@@ -224,6 +224,137 @@ function dashaTimeline(dasha, birthJd) {
 
 /* ---------------- tabs ---------------- */
 
+function chartToParams(form) {
+  const input = readChartInput(form);
+  const params = new URLSearchParams();
+  if (input.name) params.set('name', input.name);
+  params.set('date', input.date);
+  params.set('time', input.time);
+  params.set('tz', input.timeZone);
+  if (input.placeName) params.set('place', input.placeName);
+  params.set('lat', String(input.latitude));
+  params.set('lon', String(input.longitude));
+  if (Number.isFinite(input.elevation)) params.set('elev', String(input.elevation));
+  params.set('vargas', input.vargas.join(','));
+  params.set('depth', String(input.dashaDepth));
+  return params;
+}
+
+function matchToParams(form) {
+  const params = new URLSearchParams();
+  ['a', 'b'].forEach((prefix) => {
+    const root = form.querySelector(`[data-person="${prefix}"]`);
+    const value = (name) => root.querySelector(`[name="${name}"]`)?.value ?? '';
+    const trimmed = value('name').trim();
+    if (trimmed) params.set(`${prefix}_name`, trimmed);
+    params.set(`${prefix}_date`, value('date'));
+    params.set(`${prefix}_time`, value('time'));
+    params.set(`${prefix}_tz`, value('timeZone').trim() || 'Asia/Kolkata');
+    const place = value('placeName').trim();
+    if (place) params.set(`${prefix}_place`, place);
+    params.set(`${prefix}_lat`, value('latitude'));
+    params.set(`${prefix}_lon`, value('longitude'));
+    params.set(`${prefix}_elev`, value('elevation') || '0');
+  });
+  params.set('groom', form.elements.groom.value);
+  return params;
+}
+
+function buildShareUrl(params) {
+  const url = new URL(window.location.href);
+  url.search = params.toString();
+  url.hash = '';
+  return url.toString();
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand('copy');
+    area.remove();
+    return ok;
+  }
+}
+
+async function shareOrCopy(url, title, button) {
+  const original = button.textContent;
+  let status;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, url });
+      status = 'Shared / साझा किया';
+    } catch (error) {
+      if (error?.name === 'AbortError') { button.textContent = original; return; }
+      status = null;
+    }
+  }
+  if (!status) {
+    status = (await copyText(url)) ? 'Link copied / लिंक कॉपी हुआ' : 'Copy failed / कॉपी नहीं हुआ';
+  }
+  button.textContent = status;
+  setTimeout(() => { button.textContent = original; }, 1800);
+}
+
+function applyChartParams(form, params) {
+  const set = (name, key = name) => {
+    const value = params.get(key);
+    if (value !== null && form.elements[name]) form.elements[name].value = value;
+  };
+  set('name');
+  set('date');
+  set('time');
+  set('timeZone', 'tz');
+  set('placeName', 'place');
+  set('latitude', 'lat');
+  set('longitude', 'lon');
+  set('elevation', 'elev');
+  const vargas = (params.get('vargas') || '').split(',').filter(Boolean);
+  if (vargas.length) {
+    $$('#varga-chips input').forEach((input) => {
+      if (!input.disabled) input.checked = vargas.includes(input.value);
+    });
+  }
+  const depth = params.get('depth');
+  if (depth) form.elements.dashaDepth.value = depth;
+  syncVargaSelectAll();
+}
+
+function applyMatchParams(form, params) {
+  ['a', 'b'].forEach((prefix) => {
+    const root = form.querySelector(`[data-person="${prefix}"]`);
+    const set = (name, key = name) => {
+      const value = params.get(`${prefix}_${key}`);
+      const field = root?.querySelector(`[name="${name}"]`);
+      if (value !== null && field) field.value = value;
+    };
+    set('name');
+    set('date');
+    set('time');
+    set('timeZone', 'tz');
+    set('placeName', 'place');
+    set('latitude', 'lat');
+    set('longitude', 'lon');
+    set('elevation', 'elev');
+  });
+  const groom = params.get('groom');
+  if (groom) form.elements.groom.value = groom;
+}
+
+function activateTab(name) {
+  $$('.tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.tab === name));
+  $$('.panel').forEach((panel) => panel.classList.add('hidden'));
+  $(`#panel-${name}`).classList.remove('hidden');
+}
+
 $$('.tab').forEach((tab) => {
   tab.addEventListener('click', () => {
     $$('.tab').forEach((t) => t.classList.toggle('active', t === tab));
@@ -746,6 +877,7 @@ function renderChart({ chart, markdown }) {
         ${esc(c.subject.place.name || '—')} · ${num(c.subject.place.latitude, 4)}, ${num(c.subject.place.longitude, 4)} · ${c.subject.place.elevation_m} m</div>
       </div>
       <div class="actions">
+        <button class="ghost" id="share-chart">Share / साझा करें</button>
         <button class="ghost" id="print-chart">Print / PDF</button>
         <button class="ghost" id="dl-json">Download JSON</button>
         <button class="ghost" id="dl-md">Download Markdown</button>
@@ -822,6 +954,9 @@ function renderChart({ chart, markdown }) {
   `;
 
   el.classList.remove('hidden');
+  $('#share-chart').addEventListener('click', (event) => {
+    shareOrCopy(buildShareUrl(chartToParams($('#chart-form'))), 'Kundali chart', event.currentTarget);
+  });
   $('#print-chart').addEventListener('click', () => {
     document.querySelectorAll('#chart-result details').forEach((node) => { node.open = true; });
     window.print();
@@ -1021,6 +1156,7 @@ function renderMatch({ match, markdown }) {
         <div class="sub">Ashtakoota plus Mangal dosha. Raw koota values are included in the JSON for independent checking.</div>
       </div>
       <div class="actions">
+        <button class="ghost" id="share-match">Share / साझा करें</button>
         <button class="ghost" id="print-match">Print / PDF</button>
         <button class="ghost" id="match-dl-json">Download JSON</button>
         <button class="ghost" id="match-dl-md">Download Markdown</button>
@@ -1073,6 +1209,9 @@ function renderMatch({ match, markdown }) {
   `;
 
   el.classList.remove('hidden');
+  $('#share-match').addEventListener('click', (event) => {
+    shareOrCopy(buildShareUrl(matchToParams($('#match-form'))), 'Kundali match', event.currentTarget);
+  });
   $('#print-match').addEventListener('click', () => {
     document.querySelectorAll('#match-result details').forEach((node) => { node.open = true; });
     window.print();
@@ -1106,3 +1245,15 @@ $('#match-form').addEventListener('submit', async (event) => {
     button.textContent = 'Match charts';
   }
 });
+
+/* ---------------- restore from shared link ---------------- */
+
+const shareParams = new URLSearchParams(window.location.search);
+if (shareParams.has('date')) {
+  applyChartParams($('#chart-form'), shareParams);
+  $('#chart-form').requestSubmit();
+} else if (shareParams.has('a_date') || shareParams.has('b_date')) {
+  applyMatchParams($('#match-form'), shareParams);
+  activateTab('match');
+  $('#match-form').requestSubmit();
+}
