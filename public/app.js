@@ -285,23 +285,62 @@ async function copyText(text) {
   }
 }
 
-async function shareOrCopy(url, title, button) {
+function flashButton(button, message) {
   const original = button.textContent;
-  let status;
+  button.textContent = message;
+  setTimeout(() => { button.textContent = original; }, 1800);
+}
+
+async function shareOrCopy(url, title, button) {
   if (navigator.share) {
     try {
       await navigator.share({ title, url });
-      status = 'Shared / साझा किया';
+      flashButton(button, 'Shared / साझा किया');
+      return;
     } catch (error) {
-      if (error?.name === 'AbortError') { button.textContent = original; return; }
-      status = null;
+      if (error?.name === 'AbortError') return;
     }
   }
-  if (!status) {
-    status = (await copyText(url)) ? 'Link copied / लिंक कॉपी हुआ' : 'Copy failed / कॉपी नहीं हुआ';
-  }
-  button.textContent = status;
-  setTimeout(() => { button.textContent = original; }, 1800);
+  flashButton(button, (await copyText(url)) ? 'Link copied / लिंक कॉपी हुआ' : 'Copy failed / कॉपी नहीं हुआ');
+}
+
+function aiChartPrompt(markdown) {
+  return [
+    'You are a careful Vedic astrologer.',
+    'Using ONLY the computed chart data below, produce:',
+    '1. A concise overview of the chart (lagna, sun, moon, key placements).',
+    '2. Notable patterns that follow directly from the data (dignities, houses, aspects, conjunctions).',
+    '3. Dasha context: what the current mahadasha/antardasha period suggests thematically.',
+    '4. Practical areas worth exploring, as follow-up questions.',
+    '',
+    'Rules:',
+    '- Do not invent placements, dates, or events that are not in the data.',
+    '- Where the data is insufficient to judge something, say so explicitly.',
+    '- Keep the tone neutral and grounded; these are computed facts, not verdicts.',
+    '',
+    '--- CHART DATA ---',
+    '',
+    markdown,
+  ].join('\n');
+}
+
+function aiMatchPrompt(markdown) {
+  return [
+    'You are a careful Vedic astrologer.',
+    'Using ONLY the computed match data below, produce:',
+    '1. A concise Ashtakoota reading (which kootas are strong, weak, and why).',
+    '2. Mangal dosha context for both charts.',
+    '3. A balanced summary with practical follow-up questions.',
+    '',
+    'Rules:',
+    '- Do not invent placements, scores, or events that are not in the data.',
+    '- Where the data is insufficient to judge something, say so explicitly.',
+    '- Keep the tone neutral and grounded; these are computed facts, not verdicts.',
+    '',
+    '--- MATCH DATA ---',
+    '',
+    markdown,
+  ].join('\n');
 }
 
 function applyChartParams(form, params) {
@@ -877,6 +916,7 @@ function renderChart({ chart, markdown }) {
         ${esc(c.subject.place.name || '—')} · ${num(c.subject.place.latitude, 4)}, ${num(c.subject.place.longitude, 4)} · ${c.subject.place.elevation_m} m</div>
       </div>
       <div class="actions">
+        <button class="ghost" id="copy-ai-chart">Copy for AI / AI के लिए कॉपी</button>
         <button class="ghost" id="share-chart">Share / साझा करें</button>
         <button class="ghost" id="print-chart">Print / PDF</button>
         <button class="ghost" id="dl-json">Download JSON</button>
@@ -954,6 +994,11 @@ function renderChart({ chart, markdown }) {
   `;
 
   el.classList.remove('hidden');
+  $('#copy-ai-chart').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const ok = await copyText(aiChartPrompt(state.chart.markdown));
+    flashButton(button, ok ? 'Copied / कॉपी हुआ' : 'Copy failed / कॉपी नहीं हुआ');
+  });
   $('#share-chart').addEventListener('click', (event) => {
     shareOrCopy(buildShareUrl(chartToParams($('#chart-form'))), 'Kundali chart', event.currentTarget);
   });
@@ -1156,6 +1201,7 @@ function renderMatch({ match, markdown }) {
         <div class="sub">Ashtakoota plus Mangal dosha. Raw koota values are included in the JSON for independent checking.</div>
       </div>
       <div class="actions">
+        <button class="ghost" id="copy-ai-match">Copy for AI / AI के लिए कॉपी</button>
         <button class="ghost" id="share-match">Share / साझा करें</button>
         <button class="ghost" id="print-match">Print / PDF</button>
         <button class="ghost" id="match-dl-json">Download JSON</button>
@@ -1209,6 +1255,11 @@ function renderMatch({ match, markdown }) {
   `;
 
   el.classList.remove('hidden');
+  $('#copy-ai-match').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const ok = await copyText(aiMatchPrompt(state.match.markdown));
+    flashButton(button, ok ? 'Copied / कॉपी हुआ' : 'Copy failed / कॉपी नहीं हुआ');
+  });
   $('#share-match').addEventListener('click', (event) => {
     shareOrCopy(buildShareUrl(matchToParams($('#match-form'))), 'Kundali match', event.currentTarget);
   });

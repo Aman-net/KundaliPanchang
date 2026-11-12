@@ -15,6 +15,7 @@ A Vedic birth-chart **data generator**. It computes the chart and the determinis
 - **Matching:** Ashtakoota (8 kootas, 36 points) and Mangal dosha for two charts.
 - **Place search:** Open-Meteo town/city lookup fills place, latitude, longitude, elevation and timezone.
 - **Save / share:** chart and match inputs are encoded in the URL; the Share button copies the link (or opens the native share sheet), and opening the link restores the form and runs the calculation.
+- **Copy for AI:** one click copies the Markdown digest wrapped in a neutral, grounded interpretation prompt, ready to paste into an AI chat.
 - **Print / PDF:** browser print-to-PDF button on the chart and match results.
 
 ## Conventions
