@@ -738,3 +738,14 @@ ul.plain li { margin-bottom: 6px; }
   .dasha-current-label { display: none; }
 }
 
+.site-footer {
+  max-width: 1160px;
+  margin: 28px auto 0;
+  padding: 14px 0 26px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.site-footer .heart { color: #b4552d; }
+
