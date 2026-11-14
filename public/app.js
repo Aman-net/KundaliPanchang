@@ -980,6 +980,11 @@ function renderChart({ chart, markdown }) {
     </div>
 
     <div class="section">
+      <h3>Mangal Dosha <span class="hindi" lang="hi">मंगल दोष</span></h3>
+      ${chartDoshaCard(c)}
+    </div>
+
+    <div class="section">
       <h3>Birth Panchang <span class="hindi" lang="hi">जन्म पंचांग</span></h3>
       ${table(
         ['Vara / वार', 'Tithi / तिथि', 'Nakshatra / नक्षत्र', 'Yoga / योग', 'Karana / करण', 'Sunrise / सूर्योदय', 'Sunset / सूर्यास्त', 'Moonrise / चंद्रोदय', 'Moonset / चंद्रास्त'],
@@ -1135,6 +1140,37 @@ function kootaBars(rows, detail) {
         <div class="koota-detail">${detail(name, row)}</div>
       </div>`;
   }).join('')}</div>`;
+}
+
+function chartDoshaCard(chart) {
+  const m = chart.mangal_dosha;
+  if (!m) return '';
+  const label = chart.subject.name || 'Birth chart';
+  const flags = [
+    ['Lagna / लग्न', m.dosha.from_lagna, m.mars_house_from_lagna],
+    ['Moon / चंद्र', m.dosha.from_moon, m.mars_house_from_moon],
+    ['Venus / शुक्र', m.dosha.from_venus, m.mars_house_from_venus],
+  ];
+  const triggered = flags.filter(([, active]) => active);
+  const fromText = triggered
+    .map(([name, , house]) => `${esc(name)} <span class="muted">· H${house}</span>`)
+    .join(', ');
+  return `
+    <div class="dosha-card">
+      <div class="dosha-head">
+        <strong>${esc(label)}</strong>
+        ${m.any ? '<span class="badge bad">Mars flagged / मांगलिक</span>' : '<span class="badge good">Mars not flagged</span>'}
+      </div>
+      <p class="small">${planetInline('Mars')} in ${signName(m.mars_sign)} · ${m.mars_house_from_lagna}th / ${m.mars_house_from_moon}th / ${m.mars_house_from_venus}th from Lagna / Moon / Venus</p>
+      <div class="dosha-flags">
+        ${flags.map(([name, active, house]) => `<span class="flag${active ? ' on' : ''}">${esc(name)} · H${house}</span>`).join('')}
+      </div>
+      ${m.any
+        ? `<p class="small"><strong>Dosha from / दोष:</strong> ${fromText}</p>`
+        : '<p class="muted small">No dosha from any reference point.</p>'}
+      ${m.notes.length ? `<p class="muted small">${m.notes.map(esc).join('<br>')}</p>` : ''}
+      <p class="muted small">${esc(m.convention)}</p>
+    </div>`;
 }
 
 function mangalDoshaCard(person, fallbackLabel) {
