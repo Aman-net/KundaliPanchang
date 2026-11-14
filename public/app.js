@@ -130,6 +130,20 @@ function num(value, digits = 2) {
   return Number(value).toFixed(digits);
 }
 
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function fmtDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/.exec(String(value ?? ''));
+  if (!match) return esc(value);
+  const [, year, month, day, hour, minute] = match;
+  return `${Number(day)} ${MONTHS_SHORT[Number(month) - 1]} ${year}, ${hour}:${minute}`;
+}
+
+function dateCell(value) {
+  const raw = String(value ?? '');
+  return `<span class="date-cell" title="${esc(raw)}">${fmtDate(raw)}</span>`;
+}
+
 function safeFileName(value) {
   const cleaned = String(value || '')
     .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
@@ -605,6 +619,18 @@ window.addEventListener('beforeprint', () => {
   });
 });
 
+/* ---------------- back to top ---------------- */
+
+const backToTopButton = $('#back-to-top');
+const onScroll = () => {
+  backToTopButton.classList.toggle('show', window.scrollY > 400);
+};
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+backToTopButton.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 /* ---------------- chart ---------------- */
 
 const vargaCheckboxes = $$('#varga-chips input:not(:disabled)');
@@ -922,18 +948,18 @@ function renderChart({ chart, markdown }) {
   const dashaRows = c.dasha.mahadashas.map((m) => [
     planetName(m.lord),
     m.years,
-    esc(m.start),
-    esc(m.end),
+    dateCell(m.start),
+    dateCell(m.end),
     m.includes_birth ? '<span class="badge">birth</span>' : '',
   ]);
 
   const dashaDetails = c.dasha.mahadashas
     .map((m) => `
       <details>
-        <summary>${esc(m.lord)} <span class="hindi" lang="hi">${esc(PLANET_META[m.lord]?.hindi ?? '')}</span> — ${esc(m.start)} → ${esc(m.end)}</summary>
+        <summary>${esc(m.lord)} <span class="hindi" lang="hi">${esc(PLANET_META[m.lord]?.hindi ?? '')}</span> — ${dateCell(m.start)} → ${dateCell(m.end)}</summary>
         ${table(
           ['Antardasha', 'Years', 'Start', 'End'],
-          m.antardashas.map((a) => [planetName(a.lord), a.years, esc(a.start), esc(a.end)]),
+          m.antardashas.map((a) => [planetName(a.lord), a.years, dateCell(a.start), dateCell(a.end)]),
           { numColumns: [1] },
         )}
       </details>`)
@@ -945,7 +971,7 @@ function renderChart({ chart, markdown }) {
     <div class="results-head">
       <div>
         <h2>${esc(c.subject.name || 'Birth chart')}</h2>
-        <div class="sub">${esc(c.subject.birth.local)} · ${esc(c.conventions.timezone)} (${esc(c.conventions.timezone_offset)})<br />
+        <div class="sub">${dateCell(c.subject.birth.local)} · ${esc(c.conventions.timezone)} (${esc(c.conventions.timezone_offset)})<br />
         ${esc(c.subject.place.name || '—')} · ${num(c.subject.place.latitude, 4)}, ${num(c.subject.place.longitude, 4)} · ${c.subject.place.elevation_m} m</div>
       </div>
       <div class="actions">
@@ -1015,7 +1041,7 @@ function renderChart({ chart, markdown }) {
     <div class="section">
       <h3>Vimshottari Dasha <span class="hindi" lang="hi">विंशोत्तरी दशा</span></h3>
       <p class="muted small">Balance at birth: ${planetName(c.dasha.balance_at_birth.lord)} ${num(c.dasha.balance_at_birth.years, 2)} years (Moon in ${nakshatraName(c.dasha.birth_nakshatra)}).</p>
-      ${c.dasha.current ? `<p class="small">Current: ${planetName(c.dasha.current.mahadasha.lord)}${c.dasha.current.antardasha ? ` / ${planetName(c.dasha.current.antardasha.lord)}` : ''} <span class="muted">(as of ${esc(c.dasha.current.as_of)})</span></p>` : ''}
+      ${c.dasha.current ? `<p class="small">Current: ${planetName(c.dasha.current.mahadasha.lord)}${c.dasha.current.antardasha ? ` / ${planetName(c.dasha.current.antardasha.lord)}` : ''} <span class="muted">(as of ${dateCell(c.dasha.current.as_of)})</span></p>` : ''}
       ${dashaTimeline(c.dasha, c.subject.birth.julian_day_ut)}
       ${table(['Mahadasha', 'Years', 'Start', 'End', ''], dashaRows, { numColumns: [1] })}
       <h4>Antardashas</h4>
@@ -1283,7 +1309,7 @@ function renderMatch({ match, markdown }) {
       [
         ['Role / भूमिका', esc(roleA), esc(roleB)],
         ['Name / नाम', esc(a.summary.name || 'Person A'), esc(b.summary.name || 'Person B')],
-        ['Birth / जन्म', esc(a.summary.birth.local), esc(b.summary.birth.local)],
+        ['Birth / जन्म', dateCell(a.summary.birth.local), dateCell(b.summary.birth.local)],
         ['Place / स्थान', esc(a.summary.place.name || '—'), esc(b.summary.place.name || '—')],
         ['Lagna / लग्न', signName(a.summary.ascendant), signName(b.summary.ascendant)],
         ['Sun / सूर्य', signName(a.summary.sun_sign), signName(b.summary.sun_sign)],
