@@ -631,3 +631,45 @@ export function ashtakoota(a, b) {
     note: 'Ashtakoota tables vary slightly between classical texts; raw koota values are included for independent checking.',
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Mangal dosha                                                        */
+/* ------------------------------------------------------------------ */
+
+const MANGLIK_HOUSES = [1, 2, 4, 7, 8, 12];
+
+export function mangalDosha(chart) {
+  const mars = chart.planets.find((p) => p.key === 'mars');
+  const moonSign = chart.extras.moon_sign_index;
+  const venus = chart.planets.find((p) => p.key === 'venus');
+  const venusSign = venus.sign_index;
+
+  const fromLagna = mars.house;
+  const fromMoon = ((mars.sign_index - moonSign + 12) % 12) + 1;
+  const fromVenus = ((mars.sign_index - venusSign + 12) % 12) + 1;
+
+  const flags = {
+    from_lagna: MANGLIK_HOUSES.includes(fromLagna),
+    from_moon: MANGLIK_HOUSES.includes(fromMoon),
+    from_venus: MANGLIK_HOUSES.includes(fromVenus),
+  };
+
+  const notes = [];
+  if (['own', 'exalted', 'moolatrikona'].includes(mars.dignity)) {
+    notes.push(`Mars is ${mars.dignity} in ${mars.sign}, which some traditions treat as a cancellation.`);
+  }
+  if (mars.house === 1 && ['Aries', 'Scorpio', 'Capricorn'].includes(mars.sign)) {
+    notes.push('Mars in the 1st in own/exaltation sign is often exempted.');
+  }
+
+  return {
+    mars_sign: mars.sign,
+    mars_house_from_lagna: fromLagna,
+    mars_house_from_moon: fromMoon,
+    mars_house_from_venus: fromVenus,
+    dosha: flags,
+    any: flags.from_lagna || flags.from_moon || flags.from_venus,
+    notes,
+    convention: 'Mars in houses 1, 2, 4, 7, 8 or 12 from lagna, Moon or Venus.',
+  };
+}

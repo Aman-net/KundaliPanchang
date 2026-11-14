@@ -122,6 +122,15 @@ export function chartToMarkdown(chart) {
     lines.push('');
   }
 
+  lines.push('## Mangal Dosha');
+  lines.push('');
+  const md = chart.mangal_dosha;
+  lines.push(`- Mars in ${md.mars_sign}; houses from lagna ${md.mars_house_from_lagna}, Moon ${md.mars_house_from_moon}, Venus ${md.mars_house_from_venus}`);
+  lines.push(`- Dosha: from lagna ${md.dosha.from_lagna ? 'yes' : 'no'} · from Moon ${md.dosha.from_moon ? 'yes' : 'no'} · from Venus ${md.dosha.from_venus ? 'yes' : 'no'} → **${md.any ? 'present' : 'not indicated'}**`);
+  lines.push(`- Convention: ${md.convention}`);
+  for (const note of md.notes) lines.push(`- Note: ${note}`);
+  lines.push('');
+
   lines.push('## Divisional Charts');
   lines.push('');
   for (const [key, v] of Object.entries(chart.vargas)) {

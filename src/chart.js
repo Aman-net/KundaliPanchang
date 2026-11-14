@@ -1,5 +1,6 @@
 import { getEphemeris, ephemerisInfo } from './ephemeris.js';
 import { siderealPositions, ayanamsaAt, ascendantAndCusps, riseSet } from './astro.js';
+import { mangalDosha } from './vedic.js';
 import {
   SIGNS, SIGN_LORDS, PLANETS, PLANET_NAMES, VARA_NAMES,
 } from './constants.js';
@@ -252,7 +253,7 @@ export async function buildChart(input) {
     vargaCharts[v] = buildVargaChart(asc.ascendant, planets, v);
   }
 
-  return {
+  const chart = {
     schema: 'kundali/1.0',
     generated_at: new Date().toISOString(),
     conventions: {
@@ -332,6 +333,9 @@ export async function buildChart(input) {
       moon_longitude: Number(moonLon.toFixed(6)),
     },
   };
+
+  chart.mangal_dosha = mangalDosha(chart);
+  return chart;
 }
 
 export { DEFAULT_VARGAS, DEFAULT_TZ };
