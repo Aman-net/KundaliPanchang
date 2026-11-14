@@ -77,8 +77,8 @@ export function chartToMarkdown(chart) {
   lines.push('## Houses (whole sign)');
   lines.push('');
   lines.push(table(
-    ['House', 'Sign', 'Lord', 'Lord in', 'Occupants'],
-    chart.houses.map((h) => [h.house, h.sign, h.lord, h.lord_house ?? '—', h.occupants.join(', ') || '—']),
+    ['House', 'Sign', 'Lord', 'Lord in', 'Occupants', 'Bhava madhya (Sripati)'],
+    chart.houses.map((h) => [h.house, h.sign, h.lord, h.lord_house ?? '—', h.occupants.join(', ') || '—', `${h.sripati_bhava_madhya.toFixed(2)}°`]),
   ));
   lines.push('');
 
@@ -164,13 +164,17 @@ export function chartToMarkdown(chart) {
 
   const birthMaha = d.mahadashas.find((m) => m.includes_birth) || d.mahadashas[0];
   if (birthMaha) {
-    lines.push(`### Antardashas within ${birthMaha.lord} Mahadasha`);
+    lines.push(`### Antardashas (birth mahadasha marked)`);
     lines.push('');
-    lines.push(table(
-      ['Antardasha', 'Years', 'Start', 'End'],
-      birthMaha.antardashas.map((a) => [a.lord, a.years, a.start, a.end]),
-    ));
-    lines.push('');
+    for (const m of d.mahadashas) {
+      lines.push(`#### ${m.lord} Mahadasha — ${m.start} → ${m.end}${m.includes_birth ? ' (includes birth)' : ''}`);
+      lines.push('');
+      lines.push(table(
+        ['Antardasha', 'Years', 'Start', 'End'],
+        m.antardashas.map((a) => [a.lord, a.years, a.start, a.end]),
+      ));
+      lines.push('');
+    }
   }
 
   return lines.join('\n');
@@ -187,6 +191,7 @@ export function matchToMarkdown(match) {
     ['', 'Person A', 'Person B'],
     [
       ['Name', a.name || '—', b.name || '—'],
+      ['Role', match.groom === 'A' ? 'Groom (वर)' : 'Bride (वधू)', match.groom === 'B' ? 'Groom (वर)' : 'Bride (वधू)'],
       ['Birth', a.birth.local, b.birth.local],
       ['Place', a.place.name || '—', b.place.name || '—'],
       ['Lagna', a.ascendant, b.ascendant],
