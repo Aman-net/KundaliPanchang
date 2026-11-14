@@ -1,7 +1,7 @@
 import { buildChart } from '../src/chart.js';
 import { matchCharts } from '../src/match.js';
 import { chartToMarkdown, matchToMarkdown } from '../src/format.js';
-import { SIGNS } from '../src/constants.js';
+import { SIGNS, SIGN_LORDS } from '../src/constants.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -721,35 +721,84 @@ function planetInline(name) {
 function planetLegend() {
   return `<div class="chart-legend">${Object.entries(PLANET_META)
     .map(([name, meta]) => `<span><strong>${meta.abbr}</strong> ${esc(name)} <span class="hindi" lang="hi">${esc(meta.hindi)}</span></span>`)
-    .join('')}</div>`;
+    .join('')}
+    <span><strong>R</strong> Retrograde / वक्री</span>
+    <span><i class="legend-combust"></i> Combust / अस्त</span>
+  </div>`;
 }
 
-function northChartSvg(varga) {
+function natalPlanetInfo(chart) {
+  const info = {};
+  for (const p of chart.planets || []) {
+    info[p.id] = {
+      degree: p.degree_in_sign,
+      nakshatra: p.nakshatra,
+      pada: p.pada,
+      dignity: p.dignity,
+      retrograde: Boolean(p.retrograde),
+      combust: Boolean(p.combust),
+    };
+  }
+  return info;
+}
+
+function flagPlanetInfo(chart) {
+  const info = {};
+  for (const p of chart.planets || []) {
+    info[p.id] = { retrograde: Boolean(p.retrograde), combust: Boolean(p.combust) };
+  }
+  return info;
+}
+
+function northChartSvg(varga, planetInfo = {}) {
   const ascIndex = Number.isInteger(varga.ascendant_sign_index)
     ? varga.ascendant_sign_index
     : Math.max(0, SIGNS.indexOf(varga.ascendant_sign));
 
+  const houseList = varga.houses || [];
+  const lordHouseMap = {};
+  houseList.forEach((h, i) => {
+    for (const name of h.planets || []) {
+      if (!(name in lordHouseMap)) lordHouseMap[name] = i + 1;
+    }
+  });
+
   const cells = NORTH_CELLS.map((cell, index) => {
-    const house = varga.houses?.[index] ?? { house: index + 1, sign: SIGNS[(ascIndex + index) % 12], planets: [] };
+    const house = houseList[index] ?? { house: index + 1, sign: SIGNS[(ascIndex + index) % 12], planets: [] };
     const signIndex = (ascIndex + index) % 12;
     const sign = house.sign || SIGNS[signIndex];
     const signLabel = `${SIGN_ABBR[signIndex]} ${signIndex + 1}`;
     const lagna = index === 0 ? ' · Lagna' : '';
+    const lord = SIGN_LORDS[signIndex];
+    const lordHouse = lordHouseMap[lord];
     const planets = (house.planets || []).map((name, planetIndex) => {
       const meta = PLANET_META[name] ?? {
         key: 'other',
         abbr: String(name).slice(0, 2),
         hindi: name,
       };
+      const info = planetInfo[name] ?? {};
+      const attrs = [
+        info.degree !== undefined ? `data-deg="${num(info.degree, 2)}"` : '',
+        info.nakshatra ? `data-nak="${esc(info.nakshatra)}"` : '',
+        info.pada !== undefined ? `data-pada="${info.pada}"` : '',
+        info.dignity ? `data-dignity="${esc(info.dignity)}"` : '',
+        info.retrograde ? 'data-retro="1"' : '',
+        info.combust ? 'data-combust="1"' : '',
+      ].filter(Boolean).join(' ');
+      const retro = info.retrograde ? `<text class="chart-retro" x="9" y="-5">R</text>` : '';
+      const combust = info.combust ? `<circle class="chart-combust" cx="9" cy="4" r="2.4" />` : '';
       return `
-        <g class="chart-planet planet-${meta.key}" data-planet="${esc(name)}" data-house="${index + 1}" transform="translate(${cell.x}, ${cell.planetY + planetIndex * cell.line})">
+        <g class="chart-planet planet-${meta.key}" data-planet="${esc(name)}" data-house="${index + 1}" ${attrs} transform="translate(${cell.x}, ${cell.planetY + planetIndex * cell.line})">
           <title>${esc(name)} · ${esc(meta.hindi)}${lagna ? ' · Lagna house' : ''}</title>
           <text text-anchor="middle" dominant-baseline="middle">${esc(meta.abbr)}</text>
+          ${retro}
+          ${combust}
         </g>`;
     }).join('');
 
     return `
-      <g class="chart-house-group" data-house="${index + 1}" data-sign="${esc(sign)}" data-sign-hindi="${esc(SIGN_HINDI[sign] ?? '')}" data-planets="${esc((house.planets || []).join(','))}">
+      <g class="chart-house-group" data-house="${index + 1}" data-sign="${esc(sign)}" data-sign-hindi="${esc(SIGN_HINDI[sign] ?? '')}" data-planets="${esc((house.planets || []).join(','))}" data-lord="${esc(lord)}" data-lord-hindi="${esc(PLANET_META[lord]?.hindi ?? '')}" data-lord-house="${lordHouse ?? ''}">
         <title>House ${index + 1} · ${esc(sign)} / ${esc(SIGN_HINDI[sign] ?? '')}${lagna}</title>
         <polygon class="chart-house${index === 0 ? ' lagna-house' : ''}" points="${cell.points}" />
         <text class="chart-sign" x="${cell.x}" y="${cell.signY}" text-anchor="middle">${esc(signLabel)}</text>
@@ -767,7 +816,7 @@ function northChartSvg(varga) {
     <div class="chart-inspect" hidden></div>`;
 }
 
-function northIndianChart(varga) {
+function northIndianChart(varga, planetInfo = {}) {
   return `
     <div class="chart-card">
       <div class="chart-card-head">
@@ -777,7 +826,7 @@ function northIndianChart(varga) {
         </div>
         <span class="muted small">Lagna / लग्न: ${signName(varga.ascendant_sign)}</span>
       </div>
-      ${northChartSvg(varga)}
+      ${northChartSvg(varga, planetInfo)}
       ${planetLegend()}
       <p class="chart-note muted small">Tap or click a house or planet for details. Houses run anti-clockwise from the Lagna.</p>
     </div>`;
@@ -794,24 +843,41 @@ document.addEventListener('click', (event) => {
   const houseNumber = houseGroup?.dataset.house ?? target.dataset.house;
   const sign = houseGroup?.dataset.sign ?? '';
   const signHindi = houseGroup?.dataset.signHindi ?? '';
-  const planets = (houseGroup?.dataset.planets || '').split(',').filter(Boolean);
-  const planetName = target.dataset.planet;
-  const planetMeta = PLANET_META[planetName];
   const lagna = Number(houseNumber) === 1 ? ' · Lagna / लग्न' : '';
+  const houseHead = `<strong>House ${esc(houseNumber)}</strong> · ${esc(sign)} <span class="hindi">${esc(signHindi)}</span>${lagna}`;
+
+  const flagBits = (info) => [
+    info.retrograde ? '<span class="flagchip">R · वक्री</span>' : '',
+    info.combust ? '<span class="flagchip warn">अस्त · Combust</span>' : '',
+  ].filter(Boolean).join(' ');
 
   let html = '';
-  if (planetName && planetMeta) {
+  if (target.classList.contains('chart-planet') && target.dataset.planet) {
+    const name = target.dataset.planet;
+    const meta = PLANET_META[name];
+    const info = target.dataset;
+    const bits = [];
+    if (info.deg) bits.push(`${esc(info.deg)}°`);
+    if (info.nak) bits.push(`${nakshatraName(info.nak)}${info.pada ? ` p${esc(info.pada)}` : ''}`);
+    if (info.dignity) bits.push(dignityName(info.dignity));
+    const flags = flagBits(info);
     html = `
-      <div><strong>${esc(planetName)} <span class="hindi">${esc(planetMeta.hindi)}</span></strong> · House ${esc(houseNumber)} · ${esc(sign)} <span class="hindi">${esc(signHindi)}</span>${lagna}</div>`;
+      <div><strong>${esc(name)} <span class="hindi">${esc(meta?.hindi ?? '')}</span></strong> · House ${esc(houseNumber)} · ${esc(sign)} <span class="hindi">${esc(signHindi)}</span>${lagna}</div>
+      ${bits.length ? `<div class="muted small">${bits.join(' · ')}</div>` : ''}
+      ${flags ? `<div>${flags}</div>` : ''}`;
   } else if (houseNumber) {
+    const lord = houseGroup?.dataset.lord;
+    const lordHouse = houseGroup?.dataset.lordHouse;
+    const occupants = [...svg.querySelectorAll(`.chart-planet[data-house="${houseNumber}"]`)].map((node) => {
+      const n = node.dataset.planet;
+      const meta = PLANET_META[n];
+      const deg = node.dataset.deg ? ` <span class="muted">${esc(node.dataset.deg)}°</span>` : '';
+      return `${esc(n)} <span class="hindi">${esc(meta?.hindi ?? '')}</span>${deg}`;
+    });
     html = `
-      <div><strong>House ${esc(houseNumber)}</strong> · ${esc(sign)} <span class="hindi">${esc(signHindi)}</span>${lagna}</div>`;
-    if (planets.length) {
-      html += `<div class="muted small">Planets: ${planets.map((name) => {
-        const meta = PLANET_META[name];
-        return `${esc(name)} <span class="hindi">${esc(meta?.hindi ?? '')}</span>`;
-      }).join(', ')}</div>`;
-    }
+      <div>${houseHead}</div>
+      ${lord ? `<div class="muted small">Lord / स्वामी: ${esc(lord)} <span class="hindi">${esc(houseGroup.dataset.lordHindi ?? '')}</span>${lordHouse ? ` · in House ${esc(lordHouse)}` : ''}</div>` : ''}
+      ${occupants.length ? `<div class="muted small">Planets: ${occupants.join(', ')}</div>` : ''}`;
   }
 
   panel.innerHTML = html;
@@ -941,7 +1007,7 @@ function renderChart({ chart, markdown }) {
     .map(([key, v]) => `
       <div class="section">
         <h3>${key} — ${esc(v.name)} <span class="hindi" lang="hi">${esc(VARGA_HINDI[key] ?? '')}</span></h3>
-        ${northIndianChart(v)}
+        ${northIndianChart(v, flagPlanetInfo(c))}
       </div>`)
     .join('');
 
@@ -999,7 +1065,7 @@ function renderChart({ chart, markdown }) {
 
     <div class="section">
       <h3>Houses (whole sign) <span class="hindi" lang="hi">भाव</span></h3>
-      ${northIndianChart(c.vargas.D1 || { varga: 'D1', name: 'Rashi', ascendant_sign: c.summary.ascendant.sign, ascendant_sign_index: c.summary.ascendant.sign_index, houses: [] })}
+      ${northIndianChart(c.vargas.D1 || { varga: 'D1', name: 'Rashi', ascendant_sign: c.summary.ascendant.sign, ascendant_sign_index: c.summary.ascendant.sign_index, houses: [] }, natalPlanetInfo(c))}
       <div style="height:14px"></div>
       ${houses}
       <p class="muted small">Whole-sign (rashi) houses are primary. The Sripati column is the bhava-chalit placement; the last column is the Sripati bhava madhya.</p>
@@ -1274,14 +1340,14 @@ function renderMatch({ match, markdown }) {
               <div><strong>${esc(a.summary.name || 'Person A')}</strong> <span class="badge">${esc(roleA)}</span></div>
               <span class="muted small">Lagna / लग्न: ${signName(a.summary.ascendant)}</span>
             </div>
-            ${northChartSvg(chartA)}
+            ${northChartSvg(chartA, natalPlanetInfo(match.charts?.a ?? {}))}
           </div>
           <div class="match-chart-card">
             <div class="match-chart-head">
               <div><strong>${esc(b.summary.name || 'Person B')}</strong> <span class="badge">${esc(roleB)}</span></div>
               <span class="muted small">Lagna / लग्न: ${signName(b.summary.ascendant)}</span>
             </div>
-            ${northChartSvg(chartB)}
+            ${northChartSvg(chartB, natalPlanetInfo(match.charts?.b ?? {}))}
           </div>
         </div>
         ${planetLegend()}

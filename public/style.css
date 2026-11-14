@@ -320,6 +320,23 @@ td.num { font-variant-numeric: tabular-nums; }
 .chart-planet:hover text { fill: var(--accent); }
 .chart-planet { cursor: pointer; }
 .chart-planet.selected text { fill: var(--accent); }
+.chart-retro {
+  font-size: 7px;
+  font-style: italic;
+  font-weight: 700;
+}
+.chart-combust { fill: #c2410c; stroke: #fff; stroke-width: 0.6; }
+.flagchip {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.flagchip.warn { border-color: #c2410c; color: #c2410c; background: #fdf1e7; }
+.legend-combust { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #c2410c; }
 .chart-inspect {
   display: grid;
   gap: 4px;
